@@ -2378,7 +2378,13 @@ body.dark-mode .testimonial-rating {
     }
 
     .carousel-image {
-        display: none;
+        /* display: none; <-- REMOVA OU COMENTE ESTA LINHA */
+        display: block; /* Use block para que ela ocupe toda a largura */
+        flex: none;
+        width: 100%; /* Garante que a imagem use a largura total */
+        height: 250px; /* Define uma altura menor para mobile */
+        margin-bottom: 1rem;
+        border-radius: var(--border-radius);
     }
 
     .profile-settings {
