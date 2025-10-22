@@ -1,9 +1,18 @@
-// app.js - Aha! Academy Mobile App - VERSÃO FINAL COMPLETA
+// app.js - Aha! Academy Mobile App - VERSÃO FINAL COMPLETA (Corrigido Dark Mode)
 class AhaApp {
     constructor() {
         this.currentScreen = 'home';
         this.carouselInterval = null;
         this.currentCarouselIndex = 0;
+        
+        // CORREÇÃO 1: Inicializa userSettings no constructor para evitar erros
+        this.userSettings = JSON.parse(localStorage.getItem('ahaUserSettings')) || {
+            profile: {},
+            preferences: {
+                darkMode: false // Default
+            }
+        };
+
         this.userProgress = JSON.parse(localStorage.getItem('ahaProgress')) || {
             completedLessons: [],
             lastWatched: null,
@@ -14,7 +23,7 @@ class AhaApp {
 
     init() {
         console.log('🚀 Inicializando Aha! Academy...');
-        
+
         this.setupEventListeners();
         this.loadContent();
         this.initializeComponents();
@@ -24,6 +33,10 @@ class AhaApp {
         this.hideLoading();
         this.updateProgressUI();
         
+        // CORREÇÃO: loadSettings e applyDarkMode já estavam aqui, o que é ótimo!
+        this.loadSettings();
+        this.applyDarkMode();
+
         console.log('✅ Aha! Academy inicializada com sucesso!');
     }
 
@@ -62,7 +75,7 @@ class AhaApp {
         });
 
         // Contact form
-        document.getElementById('contact-form').addEventListener('submit', (e) => this.handleContactSubmit(e));
+        document.getElementById('contact-form')?.addEventListener('submit', (e) => this.handleContactSubmit(e));
 
         // Carousel controls
         const carousel = document.getElementById('hero-carousel');
@@ -82,6 +95,25 @@ class AhaApp {
                 this.changeVideoSpeed(speed);
             });
         });
+        
+        // CORREÇÃO 2: Adiciona o Event Listener para o switch principal do Dark Mode
+        const darkModeToggle = document.getElementById('darkModeToggle'); // Assumindo este é o ID do switch
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('change', (e) => {
+                this.toggleDarkMode(e.target.checked); 
+            });
+        }
+        
+        // CORREÇÃO 2.1: Adiciona o Event Listener para o checkbox de configurações
+        const darkModeConfigCheckbox = document.getElementById('dark-mode'); 
+        if (darkModeConfigCheckbox) {
+            darkModeConfigCheckbox.addEventListener('change', (e) => {
+                this.toggleDarkMode(e.target.checked); 
+                // A ação de salvar será refeita ao clicar no botão 'save-settings-btn', 
+                // mas a interface já atualiza aqui.
+            });
+        }
+
 
         // Botões de cursos
         document.addEventListener('click', (e) => {
@@ -90,7 +122,7 @@ class AhaApp {
                 const courseId = e.target.closest('.btn-curso-preview').getAttribute('data-course');
                 this.showCoursePreview(courseId);
             }
-            
+
             if (e.target.closest('.curso-card .btn')) {
                 e.preventDefault();
                 const courseId = e.target.closest('.curso-card .btn').getAttribute('data-course');
@@ -120,24 +152,24 @@ class AhaApp {
 
     initMobileNavigation() {
         const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
-        
+
         mobileNavItems.forEach(item => {
             if (item.classList.contains('menu-toggle')) {
                 item.addEventListener('click', () => this.toggleSidebar());
                 return;
             }
-            
+
             item.addEventListener('click', (e) => {
                 e.preventDefault();
-                
+
                 // Remove active de todos os itens
                 mobileNavItems.forEach(navItem => {
                     navItem.classList.remove('active');
                 });
-                
+
                 // Adiciona active ao item clicado
                 item.classList.add('active');
-                
+
                 // Muda de tela
                 const screen = item.getAttribute('data-screen');
                 this.navigateTo(screen);
@@ -149,11 +181,11 @@ class AhaApp {
     initializeCarousel() {
         this.carouselItems = document.querySelectorAll('.carousel-item');
         this.carouselDots = document.querySelectorAll('.carousel-dot');
-        
+
         if (this.carouselItems.length > 0) {
             this.showCarouselItem(0);
             this.startCarousel();
-            
+
             // Dots clicáveis
             this.carouselDots.forEach((dot, index) => {
                 dot.addEventListener('click', () => {
@@ -167,7 +199,7 @@ class AhaApp {
     showCarouselItem(index) {
         this.carouselItems.forEach(item => item.classList.remove('active'));
         this.carouselDots.forEach(dot => dot.classList.remove('active'));
-        
+
         this.carouselItems[index].classList.add('active');
         this.carouselDots[index].classList.add('active');
         this.currentCarouselIndex = index;
@@ -203,7 +235,7 @@ class AhaApp {
     toggleSidebar(show) {
         const sidebar = document.getElementById('appSidebar');
         const overlay = document.getElementById('sidebarOverlay');
-        
+
         if (typeof show === 'undefined') {
             show = !sidebar.classList.contains('active');
         }
@@ -221,7 +253,7 @@ class AhaApp {
 
     navigateTo(screen) {
         console.log('Navegando para:', screen);
-        
+
         // Update active menu item
         document.querySelectorAll('.menu-item').forEach(item => {
             item.classList.remove('active');
@@ -243,7 +275,7 @@ class AhaApp {
         if (targetScreen) {
             targetScreen.classList.add('active');
             this.currentScreen = screen;
-            
+
             // Scroll to top
             targetScreen.scrollTop = 0;
         }
@@ -252,11 +284,20 @@ class AhaApp {
         if (screen === 'dashboard') {
             this.updateDashboard();
         }
-        
+
         // Atualizar navegação de aulas
         if (screen === 'plataforma') {
             setTimeout(() => this.updateNavigationButtons(), 100);
         }
+
+        // ADICIONAR CONFIGURAÇÕES APENAS UMA VEZ
+        if (screen === 'configuracoes') {
+            setTimeout(() => this.setupConfiguracoes(), 100);
+        }
+        
+        // Salvar a última tela vista
+        this.userSettings.lastScreen = screen;
+        localStorage.setItem('ahaUserSettings', JSON.stringify(this.userSettings));
     }
 
     updateMobileNav(screen) {
@@ -269,6 +310,50 @@ class AhaApp {
                 item.classList.remove('active');
             }
         });
+    }
+    
+    // ========== DARK MODE SYSTEM - CORRIGIDO ==========
+    
+    // CORREÇÃO 3: Método dedicado para aplicar a classe ao corpo
+    applyDarkMode() {
+        const isDark = this.userSettings?.preferences?.darkMode;
+        
+        if (isDark) {
+            document.body.classList.add('dark-mode');
+            console.log('🌙 Modo escuro aplicado');
+        } else {
+            document.body.classList.remove('dark-mode');
+            console.log('☀️ Modo claro aplicado');
+        }
+        
+        // Sincroniza o switch da sidebar/cabeçalho com o estado
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        if (darkModeToggle) {
+            darkModeToggle.checked = isDark;
+        }
+        
+        // Sincroniza o checkbox da tela de configurações
+        const darkModeConfigCheckbox = document.getElementById('dark-mode');
+        if (darkModeConfigCheckbox) {
+            darkModeConfigCheckbox.checked = isDark;
+        }
+    }
+    
+    // CORREÇÃO 4: Novo método unificado para alternar e salvar
+    toggleDarkMode(enable) {
+        // Atualiza a propriedade no objeto de configurações
+        if (!this.userSettings.preferences) {
+            this.userSettings.preferences = {};
+        }
+        this.userSettings.preferences.darkMode = enable;
+
+        // Salva imediatamente no localStorage
+        localStorage.setItem('ahaUserSettings', JSON.stringify(this.userSettings)); 
+        
+        // Aplica as mudanças no CSS
+        this.applyDarkMode(); 
+        
+        this.showNotification(`Modo Escuro: ${enable ? 'Ativado' : 'Desativado'}`, 'success');
     }
 
     // ========== CONTENT LOADING ==========
@@ -401,7 +486,7 @@ class AhaApp {
 
     showCoursePreview(courseId) {
         this.showNotification(`🎬 Preview do curso ${courseId} aberto!`, 'info');
-        
+
         setTimeout(() => {
             this.showNotification('✅ Preview finalizado. Gostou do curso?', 'success');
         }, 2000);
@@ -413,10 +498,10 @@ class AhaApp {
             const courseCard = courseElement.closest('.curso-card');
             const courseTitle = courseCard.querySelector('.curso-title').textContent;
             const isFree = courseCard.querySelector('.curso-badge.gratuito');
-            
+
             if (confirm(`Deseja ${isFree ? 'inscrever-se' : 'comprar'} no curso "${courseTitle}"?`)) {
                 this.showNotification(`🎉 Parabéns! Curso "${courseTitle}" adicionado à sua conta!`, 'success');
-                
+
                 setTimeout(() => {
                     this.navigateTo('plataforma');
                 }, 1500);
@@ -496,7 +581,7 @@ class AhaApp {
             this.showNotification('📞 Entraremos em contato em até 24h! Nossa equipe vai entender suas necessidades.', 'info');
         } else {
             this.showNotification(`🎉 Excelente escolha! Plano ${planName} selecionado. Redirecionando...`, 'success');
-            
+
             setTimeout(() => {
                 this.navigateTo('cursos');
             }, 2000);
@@ -528,7 +613,7 @@ class AhaApp {
             container.innerHTML = testimonials.map(testimonial => `
                 <div class="testimonial-card">
                     <div class="testimonial-rating">
-                        ${'★'.repeat(testimonial.rating)}${'☆'.repeat(5-testimonial.rating)}
+                        ${'★'.repeat(testimonial.rating)}${'☆'.repeat(5 - testimonial.rating)}
                     </div>
                     <p class="testimonial-text">"${testimonial.text}"</p>
                     <div class="testimonial-author">
@@ -551,16 +636,16 @@ class AhaApp {
             {
                 title: "Módulo 1: Fundamentos da Liderança Consciente",
                 lessons: [
-                    { 
-                        title: "Introdução à Liderança Consciente", 
-                        duration: "15min", 
+                    {
+                        title: "Introdução à Liderança Consciente",
+                        duration: "15min",
                         video: "https://www.youtube.com/embed/6C_-ICGrcPU",
                         description: "Conceitos fundamentais da liderança consciente e seus impactos na gestão de equipes. Entenda por que a autoconsciência é o primeiro passo para uma liderança eficaz.",
                         resources: ["PDF: Ebook Liderança Consciente", "Exercício: Autoavaliação", "Checklist: Princípios Básicos"]
                     },
-                    { 
-                        title: "Autoconhecimento e Liderança", 
-                        duration: "20min", 
+                    {
+                        title: "Autoconhecimento e Liderança",
+                        duration: "20min",
                         video: "https://www.youtube.com/embed/6C_-ICGrcPU",
                         description: "Como o autoconhecimento é a base para uma liderança eficaz e transformadora. Técnicas práticas para desenvolver sua autoconsciência.",
                         resources: ["Questionário: Perfil de Liderança", "Template: Diário de Autoconhecimento"]
@@ -576,9 +661,9 @@ class AhaApp {
                     <div class="module-title">${module.title}</div>
                     <ul>
                         ${module.lessons.map((lesson, index) => {
-                            const isCompleted = this.userProgress.completedLessons.includes(lesson.title);
-                            const isLastWatched = this.userProgress.lastWatched === lesson.title;
-                            return `
+                const isCompleted = this.userProgress.completedLessons.includes(lesson.title);
+                const isLastWatched = this.userProgress.lastWatched === lesson.title;
+                return `
                             <li class="module-item ${isCompleted ? 'completed' : ''} ${isLastWatched ? 'last-watched' : ''}" 
                                 data-video="${lesson.video}" 
                                 data-description="${lesson.description}"
@@ -605,7 +690,7 @@ class AhaApp {
                 item.addEventListener('click', () => {
                     document.querySelectorAll('.module-item').forEach(i => i.classList.remove('active'));
                     item.classList.add('active');
-                    
+
                     const title = item.querySelector('.module-title').textContent;
                     const video = item.getAttribute('data-video');
                     const description = item.getAttribute('data-description');
@@ -627,12 +712,12 @@ class AhaApp {
         const videoPlaceholder = document.getElementById('video-placeholder');
         const videoPlayer = document.getElementById('video-player');
         const lessonActions = document.getElementById('lesson-actions');
-        
+
         if (videoPlaceholder && videoPlayer && lessonActions) {
             videoPlaceholder.style.display = 'none';
             videoPlayer.style.display = 'block';
             lessonActions.style.display = 'flex';
-            
+
             // Update YouTube video
             const videoContainer = document.getElementById('youtube-video');
             if (videoContainer) {
@@ -646,13 +731,13 @@ class AhaApp {
                     </iframe>
                 `;
             }
-            
+
             document.getElementById('lesson-title').textContent = title;
             document.getElementById('lesson-description').textContent = description;
-            
+
             // Atualizar recursos da aula
             this.showLessonResources(resources);
-            
+
             // Marcar como última assistida
             this.userProgress.lastWatched = title;
             this.saveProgress();
@@ -679,18 +764,18 @@ class AhaApp {
     markLessonAsWatched(lessonTitle) {
         const lessonItem = Array.from(document.querySelectorAll('.module-item'))
             .find(item => item.querySelector('.module-title').textContent === lessonTitle);
-        
+
         if (lessonItem && !lessonItem.classList.contains('completed')) {
             lessonItem.classList.add('completed');
             const lessonIcon = lessonItem.querySelector('.lesson-icon i');
             if (lessonIcon) {
                 lessonIcon.className = 'fas fa-check-circle';
             }
-            
+
             if (!lessonItem.querySelector('.lesson-check')) {
                 lessonItem.innerHTML += '<div class="lesson-check"><i class="fas fa-check"></i></div>';
             }
-            
+
             // Atualizar progresso
             if (!this.userProgress.completedLessons.includes(lessonTitle)) {
                 this.userProgress.completedLessons.push(lessonTitle);
@@ -698,7 +783,7 @@ class AhaApp {
                 this.updateProgress();
                 this.saveProgress();
                 this.updateProgressUI();
-                
+
                 this.showNotification(`✅ Aula "${lessonTitle}" concluída!`, 'success');
             }
         }
@@ -708,14 +793,14 @@ class AhaApp {
     updateProgress() {
         const totalLessons = document.querySelectorAll('.module-item').length;
         const completedLessons = this.userProgress.completedLessons.length;
-        this.userProgress.progressPercentage = totalLessons > 0 ? 
+        this.userProgress.progressPercentage = totalLessons > 0 ?
             Math.round((completedLessons / totalLessons) * 100) : 0;
     }
 
     updateProgressUI() {
         const progressBar = document.querySelector('.progress-fill');
         const progressText = document.querySelector('.progress-text');
-        
+
         if (progressBar && progressText) {
             progressBar.style.width = `${this.userProgress.progressPercentage}%`;
             progressText.textContent = `${this.userProgress.progressPercentage}% completo`;
@@ -735,7 +820,7 @@ class AhaApp {
         const dashboard = document.getElementById('dashboard-content');
         if (dashboard) {
             const hoursStudied = (this.userProgress.totalStudyTime).toFixed(1);
-            
+
             dashboard.innerHTML = `
                 <div class="dashboard-stats">
                     <div class="stat-card">
@@ -836,7 +921,7 @@ class AhaApp {
         stats.forEach(stat => {
             const finalValue = stat.textContent;
             stat.textContent = '0';
-            
+
             let current = 0;
             const increment = parseInt(finalValue) / 100;
             const timer = setInterval(() => {
@@ -891,7 +976,7 @@ class AhaApp {
     // ========== CONTACT FORM ==========
     handleContactSubmit(e) {
         e.preventDefault();
-        
+
         const formData = {
             name: document.getElementById('contact-name').value,
             email: document.getElementById('contact-email').value,
@@ -907,11 +992,11 @@ class AhaApp {
     // ========== PWA INSTALLATION ==========
     setupPWAInstall() {
         let deferredPrompt;
-        
+
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            
+
             // Mostrar botão de instalação
             const installButton = document.createElement('button');
             installButton.className = 'install-pwa-btn';
@@ -930,7 +1015,7 @@ class AhaApp {
                 box-shadow: 0 4px 12px rgba(0,0,0,0.3);
                 font-size: 14px;
             `;
-            
+
             installButton.addEventListener('click', async () => {
                 if (deferredPrompt) {
                     deferredPrompt.prompt();
@@ -942,7 +1027,7 @@ class AhaApp {
                     deferredPrompt = null;
                 }
             });
-            
+
             document.body.appendChild(installButton);
         });
     }
@@ -970,12 +1055,259 @@ class AhaApp {
             }
         }, 1500);
     }
+
+    // ========== CONFIGURAÇÕES SYSTEM ==========
+    setupConfiguracoes() {
+        // Photo upload functionality
+        const currentPhoto = document.querySelector('.current-photo');
+        const photoInput = document.getElementById('photo-input');
+        const takePhotoBtn = document.getElementById('take-photo-btn');
+        const choosePhotoBtn = document.getElementById('choose-photo-btn');
+
+        if (currentPhoto) {
+            currentPhoto.addEventListener('click', () => photoInput.click());
+        }
+
+        if (photoInput) {
+            photoInput.addEventListener('change', (e) => this.handlePhotoUpload(e));
+        }
+
+        if (takePhotoBtn) {
+            takePhotoBtn.addEventListener('click', () => this.takePhoto());
+        }
+
+        if (choosePhotoBtn) {
+            choosePhotoBtn.addEventListener('click', () => photoInput.click());
+        }
+
+        // Save settings
+        const saveBtn = document.getElementById('save-settings-btn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => this.saveSettings());
+        }
+
+        // Reset settings
+        const resetBtn = document.getElementById('reset-settings-btn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => this.resetSettings());
+        }
+
+        // Delete account
+        const deleteBtn = document.getElementById('delete-account-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => this.confirmDeleteAccount());
+        }
+
+        // Export data
+        const exportBtn = document.getElementById('export-data-btn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => this.exportData());
+        }
+
+        // Load saved settings
+        this.loadSettings();
+    }
+
+    handlePhotoUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                this.showNotification('❌ A imagem deve ter menos de 5MB', 'warning');
+                return;
+            }
+
+            if (!file.type.startsWith('image/')) {
+                this.showNotification('❌ Por favor, selecione uma imagem válida', 'warning');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const photoUrl = e.target.result;
+
+                // Update photo in settings
+                const currentPhoto = document.getElementById('current-user-photo');
+                if (currentPhoto) {
+                    currentPhoto.src = photoUrl;
+                }
+
+                // Update photo in sidebar
+                const sidebarPhoto = document.querySelector('.user-avatar img');
+                if (sidebarPhoto) {
+                    sidebarPhoto.src = photoUrl;
+                }
+
+                // Save to localStorage
+                this.userSettings = this.userSettings || { profile: {}, preferences: {} };
+                this.userSettings.profilePhoto = photoUrl;
+                localStorage.setItem('ahaUserSettings', JSON.stringify(this.userSettings));
+
+                this.showNotification('✅ Foto de perfil atualizada com sucesso!', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    takePhoto() {
+        this.showNotification('📸 Funcionalidade de câmera será implementada em breve!', 'info');
+        // Em um app real, aqui você acessaria a câmera do dispositivo
+        // navigator.mediaDevices.getUserMedia({ video: true })
+    }
+
+    saveSettings() {
+        console.log('🔧 Salvando configurações...');
+
+        // Get form values
+        const userName = document.getElementById('user-name').value;
+        const userEmail = document.getElementById('user-email').value;
+        const userPhone = document.getElementById('user-phone').value;
+        const userBio = document.getElementById('user-bio').value;
+
+        // Get preferences
+        const emailNotifications = document.getElementById('email-notifications').checked;
+        const darkMode = document.getElementById('dark-mode').checked;
+        const autoplay = document.getElementById('autoplay').checked;
+        const profileVisibility = document.getElementById('profile-visibility').value;
+
+        // Save settings
+        this.userSettings = {
+            profile: {
+                name: userName,
+                email: userEmail,
+                phone: userPhone,
+                bio: userBio
+            },
+            preferences: {
+                emailNotifications,
+                darkMode,
+                autoplay,
+                profileVisibility
+            },
+            profilePhoto: this.userSettings?.profilePhoto || document.getElementById('current-user-photo').src
+        };
+
+        localStorage.setItem('ahaUserSettings', JSON.stringify(this.userSettings));
+        console.log('💾 Configurações salvas no localStorage');
+
+        // Update sidebar user info
+        const userDetails = document.querySelector('.user-details h3');
+        if (userDetails) {
+            userDetails.textContent = userName;
+        }
+
+        // CORREÇÃO: Chama o método unificado para aplicar/sincronizar o Dark Mode
+        this.applyDarkMode();
+
+        this.showNotification('✅ Configurações salvas com sucesso!', 'success');
+    }
+
+    loadSettings() {
+        const savedSettings = localStorage.getItem('ahaUserSettings');
+        console.log('📖 Carregando configurações...', savedSettings);
+
+        if (savedSettings) {
+            this.userSettings = JSON.parse(savedSettings);
+
+            // Load profile data
+            if (this.userSettings.profile) {
+                document.getElementById('user-name').value = this.userSettings.profile.name || '';
+                document.getElementById('user-email').value = this.userSettings.profile.email || '';
+                document.getElementById('user-phone').value = this.userSettings.profile.phone || '';
+                document.getElementById('user-bio').value = this.userSettings.profile.bio || '';
+            }
+
+            // Load preferences
+            const darkModeState = this.userSettings.preferences?.darkMode || false;
+            
+            if (this.userSettings.preferences) {
+                document.getElementById('email-notifications').checked = this.userSettings.preferences.emailNotifications || false;
+                document.getElementById('dark-mode').checked = darkModeState; // Sincroniza checkbox config
+                document.getElementById('autoplay').checked = this.userSettings.preferences.autoplay || false;
+                document.getElementById('profile-visibility').value = this.userSettings.preferences.profileVisibility || 'public';
+            }
+
+            // Load photo
+            if (this.userSettings.profilePhoto) {
+                document.getElementById('current-user-photo').src = this.userSettings.profilePhoto;
+                const sidebarPhoto = document.querySelector('.user-avatar img');
+                if (sidebarPhoto) {
+                    sidebarPhoto.src = this.userSettings.profilePhoto;
+                }
+            }
+
+            // CORREÇÃO: Aplica Dark Mode baseado no estado carregado
+            this.applyDarkMode();
+
+            // Navega para a última tela vista
+            this.navigateTo(this.userSettings.lastScreen || 'home'); 
+
+        } else {
+            console.log('⚙️ Nenhuma configuração salva encontrada');
+        }
+    }
+
+    resetSettings() {
+        if (confirm('Tem certeza que deseja restaurar todas as configurações para os valores padrão?')) {
+            localStorage.removeItem('ahaUserSettings');
+            this.userSettings = {};
+
+            // Reset form values
+            document.getElementById('user-name').value = 'João Silva';
+            document.getElementById('user-email').value = 'joao@email.com';
+            document.getElementById('user-phone').value = '(11) 99999-9999';
+            document.getElementById('user-bio').value = 'Apaixonado por aprendizado e desenvolvimento pessoal!';
+
+            document.getElementById('email-notifications').checked = true;
+            document.getElementById('dark-mode').checked = false;
+            document.getElementById('autoplay').checked = true;
+            document.getElementById('profile-visibility').value = 'public';
+
+            // Reset photo
+            const defaultPhoto = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80';
+            document.getElementById('current-user-photo').src = defaultPhoto;
+            const sidebarPhoto = document.querySelector('.user-avatar img');
+            if (sidebarPhoto) {
+                sidebarPhoto.src = defaultPhoto;
+            }
+
+            // Remove dark mode
+            document.body.classList.remove('dark-mode');
+            this.toggleDarkMode(false);
+
+            this.showNotification('✅ Configurações restauradas com sucesso!', 'success');
+        }
+    }
+
+    confirmDeleteAccount() {
+        this.showNotification('❌ Funcionalidade de exclusão de conta em desenvolvimento', 'warning');
+        // Em produção, aqui você mostraria um modal de confirmação
+        // e faria uma requisição para a API para deletar a conta
+    }
+
+    exportData() {
+        const userData = {
+            profile: this.userSettings?.profile || {},
+            progress: this.userProgress,
+            courses: [], // Aqui viriam os cursos do usuário
+            exportDate: new Date().toISOString()
+        };
+
+        const dataStr = JSON.stringify(userData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `aha-academy-data-${new Date().getTime()}.json`;
+        link.click();
+
+        this.showNotification('📊 Dados exportados com sucesso!', 'success');
+    }
 }
 
 // ========== INITIALIZATION ==========
 let ahaApp;
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('🚀 Inicializando Aha! Academy...');
     ahaApp = new AhaApp();
     ahaApp.init();

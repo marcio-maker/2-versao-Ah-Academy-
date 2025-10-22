@@ -1,36 +1,40 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Aha! Academy - Liderança e Desenvolvimento Pessoal</title>
-    
+
     <!-- Meta Tags -->
-    <meta name="description" content="Plataforma de cursos online sobre liderança consciente, desenvolvimento pessoal e inteligência emocional. Transforme sua carreira com a Aha! Academy.">
-    <meta name="keywords" content="cursos online, liderança, desenvolvimento pessoal, educação, carreira, inteligência emocional">
+    <meta name="description"
+        content="Plataforma de cursos online sobre liderança consciente, desenvolvimento pessoal e inteligência emocional. Transforme sua carreira com a Aha! Academy.">
+    <meta name="keywords"
+        content="cursos online, liderança, desenvolvimento pessoal, educação, carreira, inteligência emocional">
     <meta name="author" content="Aha! Academy">
-    
+
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#4CAF50">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
+
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
-    
+
     <!-- Icons -->
     <link rel="icon" type="image/x-icon" href="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=32&q=80">
-    
+
     <!-- CSS -->
     <link rel="stylesheet" href="styles.css">
-    
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <!-- Loading Screen -->
     <div id="loading-screen" class="loading-screen">
@@ -61,10 +65,11 @@
             <div class="sidebar-header">
                 <div class="user-info">
                     <div class="user-avatar">
-                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="Usuário">
+                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80"
+                            alt="Usuário" id="sidebar-user-photo">
                     </div>
                     <div class="user-details">
-                        <h3>Olá, Aluno!</h3>
+                        <h3 id="sidebar-user-name">Olá, Aluno!</h3>
                         <p>Bem-vindo de volta</p>
                     </div>
                 </div>
@@ -102,6 +107,9 @@
                     <a href="#contato" class="menu-item" data-screen="contato">
                         <i class="fas fa-envelope"></i> Contato
                     </a>
+                    <a href="#configuracoes" class="menu-item" data-screen="configuracoes">
+                        <i class="fas fa-cog"></i> Configurações
+                    </a>
                 </div>
 
                 <div class="sidebar-footer">
@@ -133,7 +141,8 @@
                                     <button class="btn btn-primary" data-navigate="cursos">Explorar Cursos</button>
                                 </div>
                                 <div class="carousel-image">
-                                    <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Liderança">
+                                    <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                                        alt="Liderança" loading="lazy">
                                 </div>
                             </div>
                             <div class="carousel-item">
@@ -143,7 +152,8 @@
                                     <button class="btn btn-primary" data-navigate="cursos">Ver Curso</button>
                                 </div>
                                 <div class="carousel-image">
-                                    <img src="https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Comunicação">
+                                    <img src="https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                                        alt="Comunicação" loading="lazy">
                                 </div>
                             </div>
                             <div class="carousel-item">
@@ -153,7 +163,8 @@
                                     <button class="btn btn-primary" data-navigate="planos">Começar Agora</button>
                                 </div>
                                 <div class="carousel-image">
-                                    <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Transformação">
+                                    <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                                        alt="Transformação" loading="lazy">
                                 </div>
                             </div>
                         </div>
@@ -372,7 +383,8 @@
                         <!-- Fundadora -->
                         <div class="fundadora-section">
                             <div class="fundadora-foto">
-                                <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Dra. Sofia Mendes">
+                                <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
+                                    alt="Dra. Sofia Mendes" loading="lazy">
                             </div>
                             <div class="fundadora-info">
                                 <h2>Dra. Sofia Mendes</h2>
@@ -455,7 +467,8 @@
                 <div class="container">
                     <section class="fundadora-section">
                         <div class="fundadora-perfil">
-                            <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80" alt="Fundadora" class="fundadora-foto">
+                            <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80"
+                                alt="Fundadora" class="fundadora-foto" loading="lazy">
                             <div class="fundadora-info">
                                 <h2>Dra. Ana Luiza Pereira</h2>
                                 <p>Especialista em Visagismo e Desenvolvimento Humano, com mais de 15 anos de experiência formando líderes e transformando carreiras. Criadora do método "Liderança Consciente 360°".</p>
@@ -510,6 +523,9 @@
                                 <div id="lesson-actions" class="lesson-actions" style="display: none;">
                                     <button id="prev-lesson" class="btn btn-outline">
                                         <i class="fas fa-arrow-left"></i> Aula Anterior
+                                    </button>
+                                    <button id="complete-lesson" class="btn btn-success">
+                                        <i class="fas fa-check"></i> Marcar como Concluída
                                     </button>
                                     <button id="next-lesson" class="btn btn-primary">
                                         Próxima Aula <i class="fas fa-arrow-right"></i>
@@ -597,35 +613,170 @@
                 </div>
             </div>
 
-            <!-- Mobile Bottom Navigation -->
-            <nav class="mobile-bottom-nav">
-                <div class="mobile-nav-items">
-                    <a href="#home" class="mobile-nav-item active" data-screen="home">
-                        <i class="fas fa-home"></i>
-                        <span>Início</span>
-                    </a>
-                    <a href="#cursos" class="mobile-nav-item" data-screen="cursos">
-                        <i class="fas fa-book"></i>
-                        <span>Cursos</span>
-                    </a>
-                    <a href="#plataforma" class="mobile-nav-item" data-screen="plataforma">
-                        <i class="fas fa-play-circle"></i>
-                        <span>Aulas</span>
-                    </a>
-                    <a href="#comunidade" class="mobile-nav-item" data-screen="comunidade">
-                        <i class="fas fa-users"></i>
-                        <span>Comunidade</span>
-                    </a>
-                    <button class="mobile-nav-item menu-toggle" id="mobileMenuToggle">
-                        <i class="fas fa-bars"></i>
-                        <span>Menu</span>
-                    </button>
+            <!-- Configurações Screen -->
+            <div id="configuracoes-screen" class="app-screen">
+                <div class="screen-header">
+                    <h1>Configurações</h1>
+                    <p>Gerencie sua conta e preferências</p>
                 </div>
-            </nav>
+                <div class="container">
+                    <div class="configuracoes-content">
+                        <!-- Perfil Section -->
+                        <div class="config-section">
+                            <h2><i class="fas fa-user"></i> Perfil</h2>
+                            <div class="profile-settings">
+                                <div class="photo-upload">
+                                    <div class="current-photo">
+                                        <img id="current-user-photo"
+                                            src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80"
+                                            alt="Foto atual">
+                                        <div class="photo-overlay">
+                                            <i class="fas fa-camera"></i>
+                                            <span>Alterar</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="photo-input" accept="image/*" style="display: none;">
+                                    <div class="photo-actions">
+                                        <button type="button" class="btn btn-outline" id="take-photo-btn">
+                                            <i class="fas fa-camera"></i> Tirar Foto
+                                        </button>
+                                        <button type="button" class="btn btn-outline" id="choose-photo-btn">
+                                            <i class="fas fa-image"></i> Escolher da Galeria
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="profile-form">
+                                    <div class="form-group">
+                                        <label for="user-name">Nome Completo</label>
+                                        <input type="text" id="user-name" value="João Silva">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="user-email">Email</label>
+                                        <input type="email" id="user-email" value="joao@email.com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="user-phone">Telefone</label>
+                                        <input type="tel" id="user-phone" value="(11) 99999-9999">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="user-bio">Biografia</label>
+                                        <textarea id="user-bio" rows="3"
+                                            placeholder="Conte um pouco sobre você...">Apaixonado por aprendizado e desenvolvimento pessoal!</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preferências Section -->
+                        <div class="config-section">
+                            <h2><i class="fas fa-cog"></i> Preferências</h2>
+                            <div class="preferences-grid">
+                                <div class="preference-item">
+                                    <div class="preference-info">
+                                        <h4>Notificações por Email</h4>
+                                        <p>Receba atualizações sobre novos cursos</p>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="email-notifications" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div class="preference-item">
+                                    <div class="preference-info">
+                                        <h4>Modo Escuro</h4>
+                                        <p>Interface com tema escuro</p>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="dark-mode">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div class="preference-item">
+                                    <div class="preference-info">
+                                        <h4>Reprodução Automática</h4>
+                                        <p>Próxima aula inicia automaticamente</p>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="autoplay" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Privacidade Section -->
+                        <div class="config-section">
+                            <h2><i class="fas fa-shield-alt"></i> Privacidade</h2>
+                            <div class="privacy-options">
+                                <div class="privacy-item">
+                                    <h4>Perfil Público</h4>
+                                    <p>Outros alunos podem ver seu perfil</p>
+                                    <select id="profile-visibility">
+                                        <option value="public">Público</option>
+                                        <option value="private">Privado</option>
+                                        <option value="contacts">Apenas Contatos</option>
+                                    </select>
+                                </div>
+                                <div class="privacy-item">
+                                    <h4>Exportar Dados</h4>
+                                    <p>Baixe todos os seus dados da plataforma</p>
+                                    <button type="button" class="btn btn-outline" id="export-data-btn">
+                                        <i class="fas fa-download"></i> Exportar Dados
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions Section -->
+                        <div class="config-section">
+                            <h2><i class="fas fa-exclamation-triangle"></i> Ações</h2>
+                            <div class="action-buttons">
+                                <button type="button" class="btn btn-primary" id="save-settings-btn">
+                                    <i class="fas fa-save"></i> Salvar Alterações
+                                </button>
+                                <button type="button" class="btn btn-outline" id="reset-settings-btn">
+                                    <i class="fas fa-undo"></i> Restaurar Padrões
+                                </button>
+                                <button type="button" class="btn btn-danger" id="delete-account-btn">
+                                    <i class="fas fa-trash"></i> Excluir Conta
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
+
+        <!-- Mobile Bottom Navigation -->
+        <nav class="mobile-bottom-nav">
+            <div class="mobile-nav-items">
+                <a href="#home" class="mobile-nav-item active" data-screen="home">
+                    <i class="fas fa-home"></i>
+                    <span>Início</span>
+                </a>
+                <a href="#cursos" class="mobile-nav-item" data-screen="cursos">
+                    <i class="fas fa-book"></i>
+                    <span>Cursos</span>
+                </a>
+                <a href="#plataforma" class="mobile-nav-item" data-screen="plataforma">
+                    <i class="fas fa-play-circle"></i>
+                    <span>Aulas</span>
+                </a>
+                <a href="#comunidade" class="mobile-nav-item" data-screen="comunidade">
+                    <i class="fas fa-users"></i>
+                    <span>Comunidade</span>
+                </a>
+                <button class="mobile-nav-item menu-toggle" id="mobileMenuToggle">
+                    <i class="fas fa-bars"></i>
+                    <span>Menu</span>
+                </button>
+            </div>
+        </nav>
     </div>
 
     <!-- JavaScript -->
     <script src="app.js"></script>
 </body>
+
 </html>
