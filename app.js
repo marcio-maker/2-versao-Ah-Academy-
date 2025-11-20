@@ -1353,7 +1353,7 @@ saveSettingsSilent() {
             return total + (module.lessons ? module.lessons.length : 0);
         }, 0);
     }
-    // ========== SISTEMA DE APRENDIZADO COMPLETO ==========
+   
     // ========== SISTEMA DE APRENDIZADO COMPLETO - ATUALIZADO ==========
     loadPlatformModules() {
         const container = document.getElementById('module-list');
@@ -1553,6 +1553,80 @@ saveSettingsSilent() {
             this.userProgress.totalStudyTime += studyTime;
             this.saveProgress();
             this.updateProgressUI();
+        }
+    }
+
+    // ========= CORREÇÃO: ADICIONANDO MÉTODOS DE PROGRESSO FALTANTES =========
+    updateProgress() {
+        // Método para calcular a porcentagem de progresso geral
+        if (!this.currentCourse) return;
+
+        // Flatten: Converte a lista de módulos e lições em uma lista única de lições
+        const allLessons = this.currentCourse.modules.flatMap(module => module.lessons);
+        const totalLessons = allLessons.length;
+
+        if (totalLessons === 0) {
+            this.userProgress.progressPercentage = 0;
+            return;
+        }
+
+        // Conta as lições completadas
+        const completedCount = allLessons.filter(lesson => this.userProgress.completedLessons.includes(lesson.id)).length;
+        
+        // Calcula e define a porcentagem
+        this.userProgress.progressPercentage = (completedCount / totalLessons) * 100;
+        this.saveProgress();
+    }
+
+    updateProgressUI() {
+        // Método para atualizar a interface do usuário (UI) com o progresso atual.
+        const progressEl = document.getElementById('user-progress-bar');
+        const progressTextEl = document.getElementById('progress-percentage-text');
+
+        const percentage = this.userProgress.progressPercentage || 0;
+
+        // Atualiza a barra de progresso (exemplo: na tela Dashboard)
+        if (progressEl) {
+            progressEl.style.width = `${percentage}%`;
+        }
+
+        // Atualiza o texto da porcentagem (exemplo: na tela Dashboard)
+        if (progressTextEl) {
+            progressTextEl.textContent = `${Math.round(percentage)}%`;
+        }
+
+        // Atualizar tempo total de estudo (totalStudyTime é salvo em horas)
+        const totalTimeEl = document.getElementById('total-study-time');
+        if (totalTimeEl) {
+            const hours = Math.floor(this.userProgress.totalStudyTime);
+            const minutes = Math.round((this.userProgress.totalStudyTime - hours) * 60);
+            totalTimeEl.textContent = `${hours}h ${minutes}min`;
+        }
+    }
+
+    // ========= CORREÇÃO: ADICIONANDO MÉTODO DE NAVEGAÇÃO FALTANTE =========
+    updateNavigationButtons() {
+        // Seleciona todos os links de navegação relevantes (mobile e sidebar)
+        const navItems = document.querySelectorAll('.mobile-nav-item, .sidebar-nav-item');
+
+        // Itera sobre os itens e define a classe 'active'
+        navItems.forEach(item => {
+            // data-screen deve corresponder a this.currentScreen
+            const screenName = item.getAttribute('data-screen');
+
+            if (screenName === this.currentScreen) {
+                // Ativa o botão da tela atual
+                item.classList.add('active');
+            } else {
+                // Desativa os outros botões
+                item.classList.remove('active');
+            }
+        });
+
+        // Garantir que o botão de menu mobile não fique ativo indevidamente
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        if (mobileMenuToggle) {
+            mobileMenuToggle.classList.remove('active'); 
         }
     }
 
