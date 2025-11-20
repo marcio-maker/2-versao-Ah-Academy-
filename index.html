@@ -24,7 +24,7 @@
 
     <!-- Icons -->
     <link rel="icon" type="image/x-icon"
-        href="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=32&q=80">
+        href="https://tse2.mm.bing.net/th/id/OIP.eG48ANWc1bnK4lkcUFVdEwHaFj?rs=1&pid=ImgDetMain&o=7&rm=3">
 
     <!-- CSS -->
     <link rel="stylesheet" href="styles.css">
@@ -111,16 +111,20 @@
                     <a href="#configuracoes" class="menu-item" data-screen="configuracoes">
                         <i class="fas fa-cog"></i> Configurações
                     </a>
-                </div>
+                    <div class="menu-items"></div>
 
-                <div class="sidebar-footer">
-                    <div class="progress-section">
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 0%"></div>
-                        </div>
-                        <span class="progress-text">0% completo</span>
+                    <div class="sidebar-discreet-footer">
+                        <p>Desenvolvido por: Marcio Maker</p>
+                        <a href="https://wa.me/5511914809693" target="_blank" title="Fale com Marcio Maker no WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
                     </div>
-                </div>
+
+                    <div class="sidebar-footer">
+                        <button id="logoutButton" class="btn btn-danger btn-full" onclick="ahaApp.logoutUser()">
+                            <i class="fas fa-sign-out-alt"></i> Sair
+                        </button>
+                    </div>
             </nav>
         </div>
 
@@ -440,7 +444,7 @@
                                     </div>
                                 </div>
                                 <div class="timeline-item">
-                                    <div class="timeline-ano">2023</div>
+                                    <div class="timeline-ano">2025</div>
                                     <div class="timeline-content">
                                         <h3>Plataforma Completa</h3>
                                         <p>Lançamento da plataforma própria com cursos interativos, comunidade e
@@ -594,6 +598,87 @@
                                     <div class="video-player" id="video-player" style="display: none;">
                                         <div class="youtube-video" id="youtube-video">
                                             <!-- YouTube iframe será inserido via JavaScript -->
+                                            <!-- Adicione esta seção após o video-player -->
+                                            <div class="lesson-container">
+                                                <div class="lesson-header">
+                                                    <h2 id="lesson-title">Selecione uma aula para começar</h2>
+                                                    <div class="lesson-meta">
+                                                        <span id="lesson-duration"><i class="fas fa-clock"></i>
+                                                            Duração</span>
+                                                        <span id="lesson-instructor"><i class="fas fa-user"></i>
+                                                            Instrutor</span>
+                                                        <span id="lesson-progress"><i class="fas fa-chart-line"></i>
+                                                            Progresso</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="lesson-content">
+                                                    <div id="video-placeholder" class="video-placeholder">
+                                                        <i class="fas fa-play-circle fa-4x"></i>
+                                                        <h3>Selecione uma aula para começar</h3>
+                                                        <p>Escolha uma aula na lista ao lado para iniciar seu
+                                                            aprendizado</p>
+                                                    </div>
+
+                                                    <div id="video-player" class="video-player" style="display: none;">
+                                                        <div class="video-container">
+                                                            <div id="youtube-video" class="youtube-video">
+                                                                <!-- Player do YouTube será injetado aqui -->
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="video-controls">
+                                                            <div class="speed-controls">
+                                                                <span>Velocidade:</span>
+                                                                <button class="speed-btn"
+                                                                    data-speed="0.75">0.75x</button>
+                                                                <button class="speed-btn active"
+                                                                    data-speed="1">1x</button>
+                                                                <button class="speed-btn"
+                                                                    data-speed="1.25">1.25x</button>
+                                                                <button class="speed-btn" data-speed="1.5">1.5x</button>
+                                                                <button class="speed-btn" data-speed="2">2x</button>
+                                                            </div>
+                                                            <button class="btn btn-outline" onclick="ahaApp.takeNote()">
+                                                                <i class="fas fa-sticky-note"></i> Adicionar Nota
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="lesson-description-container">
+                                                        <h4>Descrição da Aula</h4>
+                                                        <p id="lesson-description" class="lesson-description">
+                                                            Selecione uma aula para ver sua descrição...
+                                                        </p>
+                                                    </div>
+
+                                                    <div id="lesson-resources" class="lesson-resources"
+                                                        style="display: none;">
+                                                        <!-- Recursos serão injetados aqui -->
+                                                    </div>
+
+                                                    <div id="completion-section">
+                                                        <!-- Seção de conclusão será injetada aqui -->
+                                                    </div>
+                                                </div>
+
+                                                <div id="lesson-actions" class="lesson-navigation"
+                                                    style="display: none;">
+                                                    <button id="prev-lesson" class="nav-btn prev"
+                                                        onclick="ahaApp.navigateLesson('prev')">
+                                                        <i class="fas fa-arrow-left"></i> Aula Anterior
+                                                    </button>
+
+                                                    <button id="mark-completed-btn" class="btn btn-success">
+                                                        <i class="fas fa-check"></i> Marcar como Concluída
+                                                    </button>
+
+                                                    <button id="next-lesson" class="nav-btn next"
+                                                        onclick="ahaApp.navigateLesson('next')">
+                                                        Próxima Aula <i class="fas fa-arrow-right"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -726,7 +811,7 @@
                                 <i class="fas fa-phone"></i>
                                 <div>
                                     <h3>Telefone</h3>
-                                    <p>(11) 99999-9999</p>
+                                    <p>(11) 99999-7075</p>
                                 </div>
                             </div>
                             <div class="contact-item">

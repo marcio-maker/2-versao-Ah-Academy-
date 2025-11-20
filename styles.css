@@ -277,6 +277,13 @@ p { margin-bottom: 1rem; }
     z-index: 101;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.app-sidebar::-webkit-scrollbar {
+    display: none;
 }
 
 .app-sidebar.active {
@@ -291,6 +298,20 @@ p { margin-bottom: 1rem; }
     justify-content: space-between;
     background: var(--primary-color);
     color: white;
+    flex-shrink: 0;
+}
+
+.sidebar-nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+    display: none;
 }
 
 .user-info {
@@ -340,15 +361,16 @@ p { margin-bottom: 1rem; }
     background: rgba(255, 255, 255, 0.1);
 }
 
-.sidebar-nav {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
 .menu-items {
     padding: 1rem 0;
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.menu-items::-webkit-scrollbar {
+    display: none;
 }
 
 .menu-item {
@@ -386,8 +408,9 @@ p { margin-bottom: 1rem; }
 }
 
 .sidebar-footer {
-    padding: 1.5rem;
+    padding: 1rem 1.5rem; /* era 1.5rem */
     border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
 }
 
 .progress-section {
@@ -395,22 +418,15 @@ p { margin-bottom: 1rem; }
 }
 
 .progress-bar {
-    height: 6px;
+    height: 4px; /* era 6px */
     background: var(--bg-light);
-    border-radius: 3px;
-    margin-bottom: 0.5rem;
+    border-radius: 2px;
+    margin-bottom: 0.25rem; /* era 0.5rem */
     overflow: hidden;
 }
 
-.progress-fill {
-    height: 100%;
-    background: var(--primary-color);
-    border-radius: 3px;
-    transition: width 0.3s ease;
-}
-
 .progress-text {
-    font-size: 0.8rem;
+    font-size: 0.7rem; /* era 0.8rem */
     color: var(--text-secondary);
     font-weight: 500;
 }
@@ -1166,42 +1182,332 @@ p { margin-bottom: 1rem; }
     background: var(--bg-light);
 }
 
+/* ===== SISTEMA DE AULAS - ESTILOS COMPLETOS ===== */
+.lesson-container {
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.lesson-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-light);
+}
+
+.lesson-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.lesson-meta {
+    display: flex;
+    gap: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.lesson-content {
+    padding: 2rem;
+}
+
+.video-container {
+    position: relative;
+    width: 100%;
+    background: #000;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.video-player {
+    width: 100%;
+    height: 400px;
+}
+
+.youtube-video {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.video-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--bg-light);
+    border-top: 1px solid var(--border-color);
+}
+
+.lesson-description {
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
 .lesson-resources {
     background: var(--bg-light);
-    padding: 1rem;
+    padding: 1.5rem;
     border-radius: var(--border-radius);
     border-left: 4px solid var(--secondary-color);
 }
 
 .lesson-resources h4 {
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
     color: var(--text-primary);
 }
 
-.lesson-resources ul {
+.resource-list {
     list-style: none;
-    margin: 0;
 }
 
-.lesson-resources li {
+.resource-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.resource-item:hover {
+    transform: translateX(5px);
+    box-shadow: var(--shadow);
+}
+
+.resource-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 8px;
+}
+
+.resource-info {
+    flex: 1;
+}
+
+.resource-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.resource-type {
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.resource-download {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: var(--transition);
+}
+
+.resource-download:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.lesson-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-light);
+}
+
+.nav-btn {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 0;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    background: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.nav-btn:hover:not(:disabled) {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.nav-btn.prev {
+    background: var(--text-secondary);
+}
+
+.nav-btn.prev:hover:not(:disabled) {
+    background: var(--text-light);
+}
+
+.completion-section {
+    text-align: center;
+    padding: 2rem;
+    background: var(--bg-light);
+    border-radius: var(--border-radius);
+    margin-top: 2rem;
+}
+
+.progress-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.progress-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: conic-gradient(var(--primary-color) 0% 75%, var(--bg-light) 75% 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.progress-circle::before {
+    content: '';
+    width: 50px;
+    height: 50px;
+    background: var(--bg-white);
+    border-radius: 50%;
+    position: absolute;
+}
+
+.progress-text {
+    position: relative;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+/* Quiz Styles */
+.quiz-container {
+    background: var(--bg-white);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    margin-top: 2rem;
+}
+
+.quiz-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.quiz-question {
+    margin-bottom: 2rem;
+}
+
+.quiz-question h4 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.quiz-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-light);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+    border: 2px solid transparent;
+}
+
+.quiz-option:hover {
+    background: rgba(76, 175, 80, 0.05);
+}
+
+.quiz-option.selected {
+    border-color: var(--primary-color);
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.quiz-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Achievement Styles */
+.achievement-notification {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-hover);
+    padding: 1.5rem;
+    z-index: 10000;
+    transform: translateX(400px);
+    transition: transform 0.3s ease;
+    border-left: 4px solid #FFD700;
+}
+
+.achievement-notification.show {
+    transform: translateX(0);
+}
+
+.achievement-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.achievement-icon {
+    font-size: 2rem;
+}
+
+.achievement-text h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+}
+
+.achievement-text p {
+    margin: 0;
     color: var(--text-secondary);
     font-size: 0.9rem;
 }
 
-.lesson-resources li i {
-    color: var(--secondary-color);
-}
-
-.lesson-actions {
-    padding: 1.5rem;
-    border-top: 1px solid var(--border-color);
-    display: none;
-    justify-content: space-between;
-    gap: 1rem;
+.achievement-close {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 0.5rem;
 }
 
 /* Modules Sidebar */
@@ -2033,7 +2339,47 @@ input:checked + .slider {
 input:checked + .slider:before {
     transform: translateX(26px);
 }
+/* ===== PLATAFORMA STYLES ===== */
+.plataforma-demo {
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin: 2rem 0;
+}
 
+.plataforma-header {
+    background: var(--primary-color);
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.plataforma-header h3 {
+    margin: 0 0 0.5rem 0;
+    color: white;
+    font-size: 1.3rem;
+}
+
+.plataforma-header p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+.progress-info {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.plataforma-body {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    min-height: 600px;
+}
 .privacy-options {
     display: flex;
     flex-direction: column;
@@ -2457,7 +2803,9 @@ body.dark-mode .methodology-tag:hover {
 
     .testimonials-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
     }
+}
 
     .continue-card {
         flex-direction: column;
@@ -2556,20 +2904,290 @@ body.dark-mode .methodology-tag:hover {
 }
 
 @media (max-width: 768px) {
-    .fundadora-video iframe {
-        height: 250px;
+    /* CURSOS GRID - 2 COLUNAS */
+    .cursos-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
     }
     
-    .fundadora-info h2 {
+    .curso-card {
+        margin-bottom: 0;
+    }
+    
+    .curso-image {
+        height: 120px;
+    }
+    
+    .curso-content {
+        padding: 1rem;
+    }
+    
+    .curso-title {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .curso-description {
+        font-size: 0.8rem;
+        margin-bottom: 0.75rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .curso-meta {
+        font-size: 0.7rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .curso-footer {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+    }
+    
+    .curso-price {
+        font-size: 1rem;
+    }
+    
+    .curso-badge {
+        top: 0.5rem;
+        right: 0.5rem;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+    }
+
+    /* FEATURES GRID - 2 COLUNAS */
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .feature-card {
+        padding: 1rem;
+    }
+    
+    .feature-card i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .feature-card h3 {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .feature-card p {
+        font-size: 0.8rem;
+        margin-bottom: 0;
+    }
+
+    /* DASHBOARD STATS - 2 COLUNAS */
+    .dashboard-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-card i {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-card h3 {
+        font-size: 1.25rem;
+    }
+    
+    .stat-card p {
+        font-size: 0.8rem;
+    }
+
+    /* TESTIMONIALS GRID - 2 COLUNAS */
+    .testimonials-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .testimonial-card {
+        padding: 1rem;
+    }
+    
+    .testimonial-text {
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+    }
+    
+    .author-avatar {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .author-info h4 {
+        font-size: 0.9rem;
+    }
+    
+    .author-info p {
+        font-size: 0.8rem;
+    }
+
+    /* PLANOS GRID - 1 COLUNA (melhor usabilidade) */
+    .planos-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .plano-card {
+        padding: 1.5rem;
+    }
+    
+    .plano-card.featured {
+        transform: none;
+    }
+    
+    .plano-price {
+        font-size: 2rem;
+    }
+
+    /* COMUNIDADE FEATURES - 2 COLUNAS */
+    .comunidade-features {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .comunidade-feature {
+        padding: 1rem;
+    }
+    
+    .comunidade-feature i {
+        font-size: 2rem;
+    }
+    
+    .comunidade-feature h3 {
+        font-size: 0.9rem;
+    }
+    
+    .comunidade-feature p {
+        font-size: 0.8rem;
+    }
+
+    /* VALORES GRID - 2 COLUNAS */
+    .valores-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .valor-card {
+        padding: 1rem;
+    }
+    
+    .valor-card i {
+        font-size: 2rem;
+    }
+    
+    .valor-card h3 {
+        font-size: 0.9rem;
+    }
+    
+    .valor-card p {
+        font-size: 0.8rem;
+    }
+
+    /* STATS SECTION - 2 COLUNAS */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .stat-item {
+        padding: 1rem 0.5rem;
+    }
+    
+    .stat-number {
         font-size: 1.75rem;
     }
     
-    .metodologias-tags {
+    .stat-label {
+        font-size: 0.9rem;
+    }
+
+    /* COMUNIDADE STATS - 2 COLUNAS */
+    .comunidade-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .comunidade-stat {
+        padding: 1rem 0.5rem;
+    }
+    
+    .comunidade-stat .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .comunidade-stat .stat-label {
+        font-size: 0.8rem;
+    }
+
+    /* BOTÕES MENORES */
+    .btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.8rem;
+    }
+    
+    .btn-sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.7rem;
+    }
+
+    /* CONTINUE LEARNING COMPACTO */
+    .continue-card {
+        padding: 0.75rem;
+        gap: 0.75rem;
+    }
+    
+    .continue-card i {
+        font-size: 1.5rem;
+    }
+    
+    .continue-info h4 {
+        font-size: 0.9rem;
+        margin-bottom: 0.2rem;
+    }
+    
+    .continue-info p {
+        font-size: 0.8rem;
+    }
+
+     .video-player {
+        height: 250px;
+    }
+    
+    .lesson-navigation {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .nav-btn {
+        width: 100%;
         justify-content: center;
     }
     
-    .destaque-item {
-        padding: 0.75rem;
+    .lesson-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .resource-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .quiz-actions {
+        flex-direction: column;
+        gap: 1rem;
     }
 }
 
@@ -2578,8 +3196,24 @@ body.dark-mode .methodology-tag:hover {
         padding: 0 0.5rem;
     }
 
+    .app-main {
+        margin-bottom: 50px;
+        height: calc(100vh - 110px); /* 60px header + 50px navbar */
+        overflow-y: auto;
+    }
+
     .app-header {
-        padding: 0.75rem;
+        padding: 0.5rem;
+        height: 60px;
+    }
+
+    .app-screen {
+        min-height: auto; /* remove min-height fixo */
+    }
+
+    .menu-toggle {
+        font-size: 1.1rem;
+        padding: 0.4rem;
     }
 
     .logo h1 {
@@ -2598,46 +3232,190 @@ body.dark-mode .methodology-tag:hover {
         font-size: 2rem;
     }
 
+    /* MANTÉM 2 COLUNAS EM TELAS PEQUENAS */
+    .cursos-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .dashboard-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .testimonials-grid {
+        grid-template-columns: 1fr; /* Testimonials em 1 coluna por ser mais legível */
+        gap: 1rem;
+    }
+    
+    .comunidade-features {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .valores-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
     .comunidade-stats {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
     }
 
-    .comunidade-cards {
-        grid-template-columns: 1fr;
-    }
-
-    .historia-section,
-    .comunidade-testimonials,
-    .comunidade-cta {
-        padding: 2rem 1rem;
-    }
-
-    .fundadora-video iframe {
-        height: 200px;
+    /* COMPONENTES AINDA MAIS COMPACTOS */
+    .curso-card {
+        padding: 0.5rem;
     }
     
-    .fundadora-foto {
-        max-width: 200px;
-        height: 200px;
+    .curso-image {
+        height: 100px;
     }
     
-    .fundadora-info h2 {
+    .curso-content {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .curso-title {
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .curso-description {
+        font-size: 0.7rem;
+        -webkit-line-clamp: 2;
+        margin-bottom: 0.5rem;
+    }
+    
+    .curso-meta {
+        font-size: 0.65rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .curso-footer {
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+    }
+    
+    .curso-price {
+        font-size: 0.9rem;
+    }
+
+    .feature-card {
+        padding: 0.75rem;
+    }
+    
+    .feature-card i {
         font-size: 1.5rem;
     }
     
-    .methodology-tag {
-        padding: 0.4rem 0.8rem;
+    .feature-card h3 {
         font-size: 0.8rem;
+    }
+    
+    .feature-card p {
+        font-size: 0.7rem;
+    }
+
+    .stat-card {
+        padding: 0.75rem;
+    }
+    
+    .stat-card i {
+        font-size: 1.25rem;
+    }
+    
+    .stat-card h3 {
+        font-size: 1rem;
+    }
+    
+    .stat-card p {
+        font-size: 0.7rem;
+    }
+
+    .comunidade-stats,
+    .historia-section,
+    .comunidade-testimonials,
+    .comunidade-cta {
+        padding: 1.5rem 0.5rem;
+    }
+
+    .fundadora-video iframe {
+        height: 180px;
+    }
+    
+    .fundadora-foto {
+        max-width: 180px;
+        height: 180px;
+    }
+    
+    .fundadora-info h2 {
+        font-size: 1.3rem;
+    }
+    
+    .methodology-tag {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
     }
     
     .destaque-item {
         flex-direction: column;
         text-align: center;
         gap: 0.5rem;
+        padding: 0.75rem;
     }
     
     .destaque-item i {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
+    }
+
+    /* BOTÕES MAIS COMPACTOS */
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.75rem;
+    }
+    
+    .btn-sm {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.65rem;
+    }
+
+    /* COMUNIDADE CARDS - 1 COLUNA PARA MELHOR LEGIBILIDADE */
+    .comunidade-cards {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .comunidade-card {
+        padding: 1rem;
+    }
+    
+    .comunidade-card p {
+        font-size: 0.8rem;
+    }
+
+    /* PLANOS - MANTÉM 1 COLUNA */
+    .planos-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .plano-card {
+        padding: 1rem;
+    }
+    
+    .plano-price {
+        font-size: 1.75rem;
     }
 }
 
@@ -2658,47 +3436,7 @@ textarea:focus-visible {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
 }
-/* ===== PLATAFORMA STYLES ===== */
-.plataforma-demo {
-    background: var(--bg-white);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-    margin: 2rem 0;
-}
 
-.plataforma-header {
-    background: var(--primary-color);
-    color: white;
-    padding: 1.5rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.plataforma-header h3 {
-    margin: 0 0 0.5rem 0;
-    color: white;
-    font-size: 1.3rem;
-}
-
-.plataforma-header p {
-    margin: 0;
-    opacity: 0.9;
-}
-
-.progress-info {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-weight: 500;
-}
-
-.plataforma-body {
-    display: grid;
-    grid-template-columns: 300px 1fr;
-    min-height: 600px;
-}
 
 /* Sidebar */
 .sidebar {
@@ -3043,4 +3781,90 @@ body.dark-mode .quiz-option {
 body.dark-mode .quiz-results {
     background: var(--bg-white);
     border-color: var(--border-color);
+}
+/* ===== Rodapé Discreto (Desenvolvedor) - Sofisticação UX ===== */
+
+.sidebar-discreet-footer {
+    /* Posição e Espaçamento */
+    text-align: center; /* Centraliza o conteúdo (como solicitado) */
+    padding: 0.5rem 1rem 1.5rem; /* Padding inferior maior */
+    margin-top: 1rem;
+    border-top: 1px solid rgba(224, 224, 224, 0.5); /* Linha divisória sutil (menos opaca) */
+    font-family: inherit; /* Usa a fonte principal do body */
+}
+
+.sidebar-discreet-footer p {
+    font-size: 0.75rem; /* Fonte pequena e discreta */
+    color: var(--text-light); /* Cor cinza claro para ser discreto */
+    margin-bottom: 0.25rem;
+}
+
+/* Estilo do Link/Ícone de Contato (WhatsApp) */
+.sidebar-discreet-footer a {
+    text-decoration: none;
+    color: var(--text-light); /* Cor inicial discreta */
+    transition: var(--transition);
+    display: inline-block; /* Garante que a transformação funcione */
+}
+
+.sidebar-discreet-footer a i {
+    font-size: 1.5rem; /* Ícone de tamanho notável */
+}
+
+/* Efeito Hover Sofisticado */
+.sidebar-discreet-footer a:hover {
+    color: var(--secondary-color); /* Usa o azul secundário ou o verde primário para destaque */
+    transform: scale(1.1); /* Ícone cresce sutilmente no hover */
+}
+body.dark-mode .lesson-container,
+body.dark-mode .quiz-container {
+    background: var(--bg-white);
+    box-shadow: var(--shadow);
+}
+
+body.dark-mode .resource-item {
+    background: var(--bg-light);
+}
+
+body.dark-mode .quiz-option {
+    background: var(--bg-light);
+}
+/* Adicione ao seu CSS */
+.lesson-description-container {
+    margin-bottom: 2rem;
+}
+
+.lesson-description-container h4 {
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.video-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--bg-light);
+    border-top: 1px solid var(--border-color);
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+    }
+}
+
+/* Responsividade melhorada */
+@media (max-width: 768px) {
+    .video-controls {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .speed-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+    }
 }

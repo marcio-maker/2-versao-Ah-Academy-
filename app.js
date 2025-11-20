@@ -50,19 +50,20 @@ class AhaApp {
         console.log('🚀 Inicializando Aha! Academy...');
 
         this.loadCoursesData();
-        this.setupEventListeners();
+        this.setupEventListeners(); // ESSENCIAL: Garante que o botão de logout será conectado
         this.loadContent();
         this.initializeComponents();
         this.initializeCarousel();
         this.setupPWAInstall();
         this.setupConnectionMonitor();
-        // this.setupServiceWorker(); // REMOVIDO - causa erro no localhost
+        // this.setupServiceWorker(); 
         this.hideLoading();
         this.updateProgressUI();
 
         // Sistema Dark Mode
         this.loadSettings();
         this.applyDarkMode();
+        this.setupSettingsActions();
 
         // Navega para última tela salva
         setTimeout(() => {
@@ -70,7 +71,7 @@ class AhaApp {
         }, 100);
 
         console.log('✅ Aha! Academy inicializada com sucesso!');
-    }
+    } 
 
     // ========== SISTEMA DE DADOS DOS CURSOS ==========
     // app.js - CORREÇÃO: Adicionando conteúdo completo para todas as aulas
@@ -932,8 +933,43 @@ class AhaApp {
 
         // Salvar a última tela vista
         this.userSettings.lastScreen = screen;
-        this.saveSettings();
+        this.saveSettingsSilent();
     }
+    // ========== FUNÇÃO SILENCIOSA PARA SALVAR CONFIGURAÇÕES ==========
+saveSettingsSilent() {
+    // Versão silenciosa do saveSettings que não mostra notificações
+    const formData = {
+        profile: {
+            name: document.getElementById('user-name')?.value || 'João Silva',
+            email: document.getElementById('user-email')?.value || 'joao@email.com',
+            phone: document.getElementById('user-phone')?.value || '(11) 99999-9999',
+            bio: document.getElementById('user-bio')?.value || 'Apaixonado por aprendizado e desenvolvimento pessoal!'
+        },
+        preferences: {
+            emailNotifications: document.getElementById('email-notifications')?.checked || true,
+            darkMode: document.getElementById('dark-mode')?.checked || false,
+            autoplay: document.getElementById('autoplay')?.checked || true,
+            profileVisibility: document.getElementById('profile-visibility')?.value || 'public'
+        },
+        profilePhoto: this.userSettings.profilePhoto,
+        lastScreen: this.userSettings.lastScreen
+    };
+
+    this.userSettings = { ...this.userSettings, ...formData };
+    localStorage.setItem('ahaUserSettings', JSON.stringify(this.userSettings));
+    this.applyDarkMode();
+
+    // Atualizar sidebar e header (silenciosamente)
+    const userDetails = document.querySelector('.user-details h3');
+    if (userDetails) {
+        userDetails.textContent = this.userSettings.profile.name;
+    }
+
+    const headerUserName = document.querySelector('.header-user-name');
+    if (headerUserName) {
+        headerUserName.textContent = this.userSettings.profile.name;
+    }
+}
 
     handleScreenSpecificActions(screen) {
         switch (screen) {
@@ -1520,453 +1556,381 @@ class AhaApp {
         }
     }
 
-    showLessonResources(resources) {
-        const resourcesContainer = document.getElementById('lesson-resources');
-        if (resourcesContainer) {
-            if (resources && resources.length > 0) {
-                resourcesContainer.innerHTML = `
-                    <h4>📚 Materiais desta aula:</h4>
-                    <ul>
-                        ${resources.map(resource => `
-                            <li>
-                                <i class="fas fa-${this.getResourceIcon(resource.type)}"></i> 
-                                ${resource.name}
-                                <button class="btn-download" onclick="ahaApp.downloadResource('${resource.url}', '${resource.name}')">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                            </li>
-                        `).join('')}
-                    </ul>
-                `;
-                resourcesContainer.style.display = 'block';
+   // ========== SISTEMA DE AULAS COMPLETO ==========
+
+// No método showLesson, vamos melhorar a implementação:
+showLesson(lessonId, title, videoUrl, description, resources) {
+    this.currentLesson = { id: lessonId, title, videoUrl, description, resources };
+
+    // Atualizar a interface da aula
+    this.updateLessonUI(title, videoUrl, description, resources);
+
+    // Marcar como última assistida
+    this.userProgress.lastWatched = lessonId;
+    this.saveProgress();
+
+    // Iniciar tracking de tempo de estudo
+    this.startStudyTimeTracking();
+
+    // Verificar se é uma nova aula e mostrar informações
+    const isNewLesson = !this.userProgress.completedLessons?.includes(lessonId);
+    if (isNewLesson) {
+        this.showNotification(`🎬 Iniciando: ${title}`, 'info');
+    }
+}
+
+updateLessonUI(title, videoUrl, description, resources) {
+    // Atualizar player de vídeo
+    const videoContainer = document.getElementById('youtube-video');
+    if (videoContainer) {
+        videoContainer.innerHTML = `
+            <iframe 
+                src="${videoUrl}?rel=0&modestbranding=1"
+                title="${title}"
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+            </iframe>
+        `;
+    }
+
+    // Atualizar informações da aula
+    const lessonTitleEl = document.getElementById('lesson-title');
+    const lessonDescEl = document.getElementById('lesson-description');
+    
+    if (lessonTitleEl) lessonTitleEl.textContent = title;
+    if (lessonDescEl) {
+        lessonDescEl.textContent = description;
+        // Adicionar botão de expandir/contrair para descrições longas
+        this.setupDescriptionToggle(lessonDescEl);
+    }
+
+    // Mostrar/ocultar elementos
+    const videoPlaceholder = document.getElementById('video-placeholder');
+    const videoPlayer = document.getElementById('video-player');
+    const lessonActions = document.getElementById('lesson-actions');
+
+    if (videoPlaceholder && videoPlayer && lessonActions) {
+        videoPlaceholder.style.display = 'none';
+        videoPlayer.style.display = 'block';
+        lessonActions.style.display = 'flex';
+    }
+
+    // Atualizar recursos
+    this.showLessonResources(resources);
+
+    // Atualizar botões de navegação
+    this.updateNavigationButtons();
+
+    // Atualizar seção de conclusão
+    this.updateCompletionSection();
+}
+
+setupDescriptionToggle(descriptionEl) {
+    const text = descriptionEl.textContent;
+    if (text.length > 200) {
+        const shortText = text.substring(0, 200) + '...';
+        const fullText = text;
+        
+        descriptionEl.textContent = shortText;
+        descriptionEl.style.cursor = 'pointer';
+        
+        descriptionEl.addEventListener('click', () => {
+            if (descriptionEl.textContent === shortText) {
+                descriptionEl.textContent = fullText;
             } else {
-                resourcesContainer.innerHTML = `
-                    <div class="no-resources">
-                        <i class="fas fa-info-circle"></i>
-                        <p>Nenhum material adicional para esta aula</p>
+                descriptionEl.textContent = shortText;
+            }
+        });
+    }
+}
+
+// Sistema de recursos melhorado
+showLessonResources(resources) {
+    const resourcesContainer = document.getElementById('lesson-resources');
+    if (!resourcesContainer) return;
+
+    if (resources && resources.length > 0) {
+        resourcesContainer.innerHTML = `
+            <h4>📚 Materiais desta aula</h4>
+            <div class="resource-list">
+                ${resources.map((resource, index) => `
+                    <div class="resource-item" data-resource-index="${index}">
+                        <div class="resource-icon">
+                            <i class="fas fa-${this.getResourceIcon(resource.type)}"></i>
+                        </div>
+                        <div class="resource-info">
+                            <div class="resource-name">${resource.name}</div>
+                            <div class="resource-type">${this.getResourceTypeName(resource.type)}</div>
+                        </div>
+                        <button class="resource-download" onclick="ahaApp.downloadResource('${resource.url}', '${resource.name}')">
+                            <i class="fas fa-download"></i>
+                        </button>
                     </div>
-                `;
-                resourcesContainer.style.display = 'block';
-            }
+                `).join('')}
+            </div>
+        `;
+        resourcesContainer.style.display = 'block';
+    } else {
+        resourcesContainer.innerHTML = `
+            <div class="no-resources">
+                <i class="fas fa-info-circle"></i>
+                <p>Nenhum material adicional para esta aula</p>
+            </div>
+        `;
+        resourcesContainer.style.display = 'block';
+    }
+}
+
+getResourceTypeName(type) {
+    const types = {
+        'pdf': 'PDF - Documento',
+        'exercise': 'Exercício Prático',
+        'checklist': 'Checklist',
+        'questionnaire': 'Questionário',
+        'template': 'Template'
+    };
+    return types[type] || 'Arquivo';
+}
+
+// Sistema de download melhorado
+downloadResource(url, filename) {
+    this.showNotification(`📥 Preparando download: ${filename}`, 'info');
+    
+    // Simular processo de download
+    setTimeout(() => {
+        // Em um ambiente real, aqui faríamos o download real
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        this.showNotification(`✅ ${filename} baixado com sucesso!`, 'success');
+        
+        // Registrar no analytics (simulado)
+        this.trackResourceDownload(filename);
+    }, 1500);
+}
+
+trackResourceDownload(filename) {
+    console.log(`📊 Recurso baixado: ${filename}`);
+    // Em produção, enviaria para Google Analytics etc.
+}
+
+// Sistema de conclusão de aula
+updateCompletionSection() {
+    const completionSection = document.getElementById('completion-section');
+    if (!completionSection) return;
+
+    const isCompleted = this.userProgress.completedLessons?.includes(this.currentLesson.id);
+    
+    if (isCompleted) {
+        completionSection.innerHTML = `
+            <div class="completion-section">
+                <div class="progress-indicator">
+                    <div class="progress-circle">
+                        <span class="progress-text">✓</span>
+                    </div>
+                    <div>
+                        <h4>Aula Concluída!</h4>
+                        <p>Você já completou esta aula</p>
+                    </div>
+                </div>
+                <button class="btn btn-outline" onclick="ahaApp.reviewLesson()">
+                    <i class="fas fa-redo"></i> Revisar Aula
+                </button>
+            </div>
+        `;
+    } else {
+        completionSection.innerHTML = `
+            <div class="completion-section">
+                <div class="progress-indicator">
+                    <div class="progress-circle">
+                        <span class="progress-text">75%</span>
+                    </div>
+                    <div>
+                        <h4>Continue Assistindo</h4>
+                        <p>Complete a aula para desbloquear o próximo conteúdo</p>
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="ahaApp.markCurrentLessonAsCompleted()">
+                    <i class="fas fa-check"></i> Marcar como Concluída
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Marcar aula como concluída (versão melhorada)
+markCurrentLessonAsCompleted() {
+    if (this.currentLesson) {
+        this.markLessonAsWatched(this.currentLesson.id, this.currentLesson.title);
+        
+        // Mostrar confetti visual (feedback)
+        this.showCompletionEffect();
+    }
+}
+
+markLessonAsWatched(lessonId, lessonTitle) {
+    const lessonItem = document.querySelector(`[data-lesson-id="${lessonId}"]`);
+    
+    if (lessonItem && !lessonItem.classList.contains('completed')) {
+        // Atualizar UI
+        lessonItem.classList.add('completed');
+        const lessonIcon = lessonItem.querySelector('.lesson-icon i');
+        if (lessonIcon) {
+            lessonIcon.className = 'fas fa-check-circle';
         }
-    }
 
-    getResourceIcon(type) {
-        const icons = {
-            'pdf': 'file-pdf',
-            'exercise': 'dumbbell',
-            'checklist': 'check-square',
-            'questionnaire': 'clipboard-list',
-            'template': 'file-alt'
-        };
-        return icons[type] || 'file-download';
-    }
-
-    downloadResource(url, filename) {
-        this.showNotification(`📥 Baixando: ${filename}`, 'info');
-
-        // Simular download
-        setTimeout(() => {
-            this.showNotification(`✅ ${filename} baixado com sucesso!`, 'success');
-        }, 2000);
-    }
-
-    markCurrentLessonAsCompleted() {
-        if (this.currentLesson) {
-            this.markLessonAsWatched(this.currentLesson.id, this.currentLesson.title);
+        // Adicionar indicador de conclusão
+        if (!lessonItem.querySelector('.lesson-check')) {
+            const checkDiv = document.createElement('div');
+            checkDiv.className = 'lesson-check';
+            checkDiv.innerHTML = '<i class="fas fa-check"></i>';
+            lessonItem.appendChild(checkDiv);
         }
-    }
 
-    markLessonAsWatched(lessonId, lessonTitle) {
-        const lessonItem = document.querySelector(`[data-lesson-id="${lessonId}"]`);
-
-        if (lessonItem && !lessonItem.classList.contains('completed')) {
-            lessonItem.classList.add('completed');
-            const lessonIcon = lessonItem.querySelector('.lesson-icon i');
-            if (lessonIcon) {
-                lessonIcon.className = 'fas fa-check-circle';
-            }
-
-            if (!lessonItem.querySelector('.lesson-check')) {
-                const checkDiv = document.createElement('div');
-                checkDiv.className = 'lesson-check';
-                checkDiv.innerHTML = '<i class="fas fa-check"></i>';
-                lessonItem.appendChild(checkDiv);
-            }
-
-            // GARANTIR que completedLessons existe
-            if (!this.userProgress.completedLessons) {
-                this.userProgress.completedLessons = [];
-            }
-
-            // Atualizar progresso
-            if (!this.userProgress.completedLessons.includes(lessonId)) {
-                this.userProgress.completedLessons.push(lessonId);
-
-                // Calcular tempo baseado na duração da aula
-                const duration = lessonItem.querySelector('.lesson-duration')?.textContent || '30min';
-                const timeMinutes = this.parseDurationToMinutes(duration);
-                this.userProgress.totalStudyTime += timeMinutes / 60; // Converter para horas
-
-                this.updateProgress();
-                this.saveProgress();
-                this.updateProgressUI();
-
-                // Verificar conquistas
-                this.checkAchievements();
-
-                this.showNotification(`✅ Aula "${lessonTitle}" concluída! +${timeMinutes}min de estudo`, 'success');
-            }
-        }
-    }
-
-    parseDurationToMinutes(duration) {
-        // Converter "25min" para 25 minutos
-        const match = duration.match(/(\d+)min/);
-        return match ? parseInt(match[1]) : 30; // Default 30 minutos
-    }
-
-    // ========== SISTEMA DE CONQUISTAS ==========
-    checkAchievements() {
-        // GARANTIR que achievements existe
-        if (!this.userProgress.achievements) {
-            this.userProgress.achievements = [];
-        }
+        // Atualizar progresso
         if (!this.userProgress.completedLessons) {
             this.userProgress.completedLessons = [];
         }
 
-        const achievements = [];
-        const completedCount = this.userProgress.completedLessons.length;
+        if (!this.userProgress.completedLessons.includes(lessonId)) {
+            this.userProgress.completedLessons.push(lessonId);
 
-        // Conquista: Primeira aula
-        if (completedCount === 1 && !this.userProgress.achievements.includes('first_lesson')) {
-            achievements.push('first_lesson');
-            this.showAchievement('🎉 Primeira Aula!', 'Você completou sua primeira aula!');
-        }
+            // Calcular tempo de estudo baseado na duração
+            const duration = lessonItem.querySelector('.lesson-duration')?.textContent || '30min';
+            const timeMinutes = this.parseDurationToMinutes(duration);
+            this.userProgress.totalStudyTime += timeMinutes / 60;
 
-        // Conquista: 5 aulas
-        if (completedCount === 5 && !this.userProgress.achievements.includes('five_lessons')) {
-            achievements.push('five_lessons');
-            this.showAchievement('📚 Aprendiz Dedicado', '5 aulas completadas! Continue assim!');
-        }
-
-        // Conquista: 10 horas de estudo
-        if (this.userProgress.totalStudyTime >= 10 && !this.userProgress.achievements.includes('ten_hours')) {
-            achievements.push('ten_hours');
-            this.showAchievement('⏰ Estudante Comprometido', '10 horas de estudo alcançadas!');
-        }
-
-        // Conquista: Curso Completo
-        const totalLessons = document.querySelectorAll('.module-item').length;
-        if (completedCount === totalLessons && totalLessons > 0 && !this.userProgress.achievements.includes('course_completed')) {
-            achievements.push('course_completed');
-            this.showAchievement('🏆 Curso Concluído!', `Você completou todas as aulas do curso!`);
-        }
-
-        // Adicionar novas conquistas
-        achievements.forEach(achievement => {
-            if (!this.userProgress.achievements.includes(achievement)) {
-                this.userProgress.achievements.push(achievement);
-            }
-        });
-
-        if (achievements.length > 0) {
+            this.updateProgress();
             this.saveProgress();
-        }
-    }
+            this.updateProgressUI();
+            this.updateCompletionSection();
 
-    showAchievement(title, description) {
-        const achievement = document.createElement('div');
-        achievement.className = 'achievement-notification';
-        achievement.innerHTML = `
-            <div class="achievement-content">
-                <div class="achievement-icon">🏆</div>
-                <div class="achievement-text">
-                    <h4>${title}</h4>
-                    <p>${description}</p>
-                </div>
-                <button class="achievement-close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `;
+            // Verificar conquistas
+            this.checkAchievements();
 
-        document.body.appendChild(achievement);
-
-        // Show achievement
-        setTimeout(() => achievement.classList.add('show'), 100);
-
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            if (achievement.parentElement) {
-                achievement.classList.remove('show');
-                setTimeout(() => achievement.remove(), 300);
-            }
-        }, 5000);
-
-        // Close button
-        achievement.querySelector('.achievement-close').addEventListener('click', () => {
-            achievement.classList.remove('show');
-            setTimeout(() => achievement.remove(), 300);
-        });
-    }
-
-    // ========== SISTEMA DE PROGRESSO ==========
-    updateProgress() {
-        const totalLessons = document.querySelectorAll('.module-item').length;
-        // GARANTIR que completedLessons existe
-        const completedLessons = this.userProgress.completedLessons ? this.userProgress.completedLessons.length : 0;
-        this.userProgress.progressPercentage = totalLessons > 0 ?
-            Math.round((completedLessons / totalLessons) * 100) : 0;
-    }
-
-    updateProgressUI() {
-        // Progress bar principal
-        const progressBar = document.querySelector('.progress-fill');
-        const progressText = document.querySelector('.progress-text');
-
-        if (progressBar && progressText) {
-            progressBar.style.width = `${this.userProgress.progressPercentage}%`;
-            progressText.textContent = `${this.userProgress.progressPercentage}% completo`;
-        }
-
-        // Progresso na plataforma
-        const platformProgress = document.querySelector('.course-progress .progress-text');
-        if (platformProgress) {
-            platformProgress.textContent = `${this.userProgress.progressPercentage}% completo`;
-        }
-
-        // Atualizar dashboard
-        this.updateDashboard();
-    }
-
-    updateDashboard() {
-        const dashboard = document.getElementById('dashboard-content');
-        if (!dashboard) return;
-
-        const hoursStudied = (this.userProgress.totalStudyTime || 0).toFixed(1);
-        const enrolledCourses = this.userProgress.enrolledCourses ? this.userProgress.enrolledCourses.length : 0;
-        const achievementsCount = this.userProgress.achievements ? this.userProgress.achievements.length : 0;
-        const completedLessons = this.userProgress.completedLessons ? this.userProgress.completedLessons.length : 0;
-
-        dashboard.innerHTML = `
-            <div class="dashboard-stats">
-                <div class="stat-card">
-                    <i class="fas fa-play-circle"></i>
-                    <h3>${this.userProgress.progressPercentage}%</h3>
-                    <p>Progresso Total</p>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-check-circle"></i>
-                    <h3>${completedLessons}</h3>
-                    <p>Aulas Concluídas</p>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-clock"></i>
-                    <h3>${hoursStudied}h</h3>
-                    <p>Horas Estudadas</p>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-trophy"></i>
-                    <h3>${achievementsCount}</h3>
-                    <p>Conquistas</p>
-                </div>
-            </div>
+            // Feedback visual
+            this.showNotification(`✅ "${lessonTitle}" concluída! +${timeMinutes}min`, 'success');
             
-            <div class="dashboard-courses">
-                <h3>Meus Cursos (${enrolledCourses})</h3>
-                ${enrolledCourses > 0 ? `
-                    <div class="courses-grid">
-                        ${this.userProgress.enrolledCourses.map(courseId => {
-            const course = this.coursesData.find(c => c.id == courseId);
-            return course ? `
-                                <div class="dashboard-course-card">
-                                    <img src="${course.image}" alt="${course.title}">
-                                    <div class="course-info">
-                                        <h4>${course.title}</h4>
-                                        <p>${course.instructor}</p>
-                                        <div class="course-progress-mini">
-                                            <div class="progress-bar">
-                                                <div class="progress-fill" style="width: ${this.userProgress.progressPercentage}%"></div>
-                                            </div>
-                                            <span>${this.userProgress.progressPercentage}%</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ` : '';
-        }).join('')}
-                    </div>
-                ` : `
-                    <div class="empty-state">
-                        <i class="fas fa-book-open fa-2x"></i>
-                        <p>Nenhum curso inscrito</p>
-                        <button class="btn btn-primary" onclick="ahaApp.navigateTo('cursos')">
-                            Explorar Cursos
-                        </button>
-                    </div>
-                `}
-            </div>
-            
-            <div class="continue-learning">
-                <h3>Continuar Aprendendo</h3>
-                ${this.userProgress.lastWatched ? `
-                    <div class="continue-card">
-                        <i class="fas fa-play-circle"></i>
-                        <div class="continue-info">
-                            <h4>${this.getLessonTitle(this.userProgress.lastWatched)}</h4>
-                            <p>Continue de onde parou</p>
-                        </div>
-                        <button class="btn btn-success" onclick="ahaApp.navigateTo('plataforma')">
-                            Continuar
-                        </button>
-                    </div>
-                ` : '<p>Comece sua primeira aula na plataforma!</p>'}
-            </div>
-
-            ${achievementsCount > 0 ? `
-                <div class="dashboard-achievements">
-                    <h3>Minhas Conquistas</h3>
-                    <div class="achievements-grid">
-                        ${this.userProgress.achievements.map(achievement => {
-            const achievementInfo = this.getAchievementInfo(achievement);
-            return achievementInfo ? `
-                                <div class="achievement-badge">
-                                    <div class="achievement-icon">${achievementInfo.icon}</div>
-                                    <div class="achievement-text">
-                                        <h4>${achievementInfo.title}</h4>
-                                        <p>${achievementInfo.description}</p>
-                                    </div>
-                                </div>
-                            ` : '';
-        }).join('')}
-                    </div>
-                </div>
-            ` : ''}
-
-            <div class="study-analytics">
-                <h3>Estatísticas de Estudo</h3>
-                <div class="analytics-grid">
-                    <div class="analytics-card">
-                        <i class="fas fa-fire"></i>
-                        <div class="analytics-info">
-                            <h4>${this.getCurrentStreak()} dias</h4>
-                            <p>Sequência atual</p>
-                        </div>
-                    </div>
-                    <div class="analytics-card">
-                        <i class="fas fa-calendar"></i>
-                        <div class="analytics-info">
-                            <h4>${this.getDaysStudied()}</h4>
-                            <p>Dias estudados</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    getCurrentStreak() {
-        // Simular sequência de dias estudados
-        return Math.min(7, Math.floor((this.userProgress.totalStudyTime || 0) / 2));
-    }
-
-    getDaysStudied() {
-        return Math.min(30, Math.floor(this.userProgress.totalStudyTime || 0));
-    }
-
-    getLessonTitle(lessonId) {
-        if (!lessonId) return "Aula não encontrada";
-
-        // Buscar o título da aula em todos os cursos
-        for (let course of this.coursesData) {
-            if (course.modules) {
-                for (let module of course.modules) {
-                    for (let lesson of module.lessons) {
-                        if (lesson.id === lessonId) {
-                            return lesson.title;
-                        }
-                    }
-                }
+            // Auto-navegar para próxima aula se configurado
+            if (this.userSettings.preferences?.autoplay) {
+                setTimeout(() => this.navigateLesson('next'), 2000);
             }
         }
-        return "Aula não encontrada";
     }
+}
 
-    getAchievementInfo(achievementId) {
-        const achievements = {
-            'first_lesson': {
-                icon: '🎉',
-                title: 'Primeira Aula',
-                description: 'Completou a primeira aula'
-            },
-            'five_lessons': {
-                icon: '📚',
-                title: 'Aprendiz Dedicado',
-                description: '5 aulas completadas'
-            },
-            'ten_hours': {
-                icon: '⏰',
-                title: 'Estudante Comprometido',
-                description: '10 horas de estudo'
-            },
-            'course_completed': {
-                icon: '🏆',
-                title: 'Curso Concluído',
-                description: 'Finalizou todas as aulas do curso'
-            }
-        };
-        return achievements[achievementId];
-    }
+// Efeito visual de conclusão
+showCompletionEffect() {
+    // Criar efeito de confetti simples
+    const confetti = document.createElement('div');
+    confetti.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 10000;
+        background: radial-gradient(circle, transparent 50%, rgba(76, 175, 80, 0.1) 100%);
+        animation: fadeOut 2s ease-in-out forwards;
+    `;
+    
+    document.body.appendChild(confetti);
+    
+    setTimeout(() => {
+        confetti.remove();
+    }, 2000);
+}
 
-    // ========== SISTEMA DE NAVEGAÇÃO DE AULAS ==========
-    navigateLesson(direction) {
-        const currentLesson = document.querySelector('.module-item.active');
-        if (!currentLesson) return;
-
-        const allLessons = Array.from(document.querySelectorAll('.module-item'));
-        const currentIndex = allLessons.indexOf(currentLesson);
-        let nextIndex;
-
-        if (direction === 'next') {
-            nextIndex = currentIndex < allLessons.length - 1 ? currentIndex + 1 : 0;
-        } else {
-            nextIndex = currentIndex > 0 ? currentIndex - 1 : allLessons.length - 1;
+// Sistema de revisão de aula
+reviewLesson() {
+    if (this.currentLesson) {
+        this.showNotification(`🔄 Reiniciando aula: ${this.currentLesson.title}`, 'info');
+        
+        // Scroll para o topo do vídeo
+        const videoPlayer = document.getElementById('video-player');
+        if (videoPlayer) {
+            videoPlayer.scrollIntoView({ behavior: 'smooth' });
         }
-
-        allLessons[nextIndex]?.click();
-        this.showNotification(`📖 ${direction === 'next' ? 'Próxima' : 'Anterior'} aula carregada`, 'info');
-    }
-
-    updateNavigationButtons() {
-        const currentLesson = document.querySelector('.module-item.active');
-        if (!currentLesson) return;
-
-        const allLessons = Array.from(document.querySelectorAll('.module-item'));
-        const currentIndex = allLessons.indexOf(currentLesson);
-
-        const prevBtn = document.getElementById('prev-lesson');
-        const nextBtn = document.getElementById('next-lesson');
-
-        if (prevBtn) {
-            prevBtn.style.opacity = currentIndex > 0 ? '1' : '0.5';
-            prevBtn.disabled = currentIndex === 0;
-        }
-
-        if (nextBtn) {
-            nextBtn.style.opacity = currentIndex < allLessons.length - 1 ? '1' : '0.5';
-            nextBtn.disabled = currentIndex === allLessons.length - 1;
+        
+        // Aqui você poderia reiniciar o vídeo se estivesse usando uma API de player
+        const iframe = document.querySelector('#youtube-video iframe');
+        if (iframe) {
+            // Reiniciar o vídeo do YouTube
+            const src = iframe.src;
+            iframe.src = src.replace(/\?.*$/, '') + '?autoplay=1';
         }
     }
+}
 
-    changeVideoSpeed(speed) {
-        // Em produção, isso controlaria a velocidade do vídeo real
-        const video = document.querySelector('#youtube-video iframe');
-        if (video) {
-            // Aqui você implementaria a mudança de velocidade no player de vídeo
-            this.showNotification(`🎚️ Velocidade do vídeo: ${speed}x`, 'info');
-        }
+// Navegação entre aulas melhorada
+navigateLesson(direction) {
+    const currentLesson = document.querySelector('.module-item.active');
+    if (!currentLesson) return;
+
+    const allLessons = Array.from(document.querySelectorAll('.module-item[data-lesson-id]:not([data-lesson-id="null"])'));
+    const currentIndex = allLessons.indexOf(currentLesson);
+    
+    let nextIndex;
+    if (direction === 'next') {
+        nextIndex = currentIndex < allLessons.length - 1 ? currentIndex + 1 : 0;
+    } else {
+        nextIndex = currentIndex > 0 ? currentIndex - 1 : allLessons.length - 1;
     }
+
+    const nextLesson = allLessons[nextIndex];
+    if (nextLesson) {
+        nextLesson.click();
+        
+        // Scroll suave para o topo
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        this.showNotification(`📖 ${direction === 'next' ? 'Próxima' : 'Aula anterior'} carregada`, 'info');
+    }
+}
+
+// Controle de velocidade de vídeo
+changeVideoSpeed(speed) {
+    // Atualizar botões de velocidade
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-speed') === speed) {
+            btn.classList.add('active');
+        }
+    });
+
+    // Em produção, isso controlaria a velocidade do vídeo real
+    // Para YouTube, você precisaria da API do YouTube
+    this.showNotification(`🎚️ Velocidade: ${speed}x`, 'info');
+    
+    // Registrar preferência
+    this.userSettings.preferences.playbackSpeed = speed;
+    this.saveSettings();
+}
+
+// Sistema de notas durante as aulas
+takeNote() {
+    const note = prompt('📝 Adicione uma nota para esta aula:');
+    if (note) {
+        if (!this.userProgress.notes) {
+            this.userProgress.notes = {};
+        }
+        
+        this.userProgress.notes[this.currentLesson.id] = note;
+        this.saveProgress();
+        this.showNotification('💾 Nota salva com sucesso!', 'success');
+    }
+}
+
+// Buscar notas da aula
+getLessonNote(lessonId) {
+    return this.userProgress.notes?.[lessonId] || null;
+}
 
     // ========== SISTEMA DE CONFIGURAÇÕES COMPLETO ==========
     loadSettingsUI() {
@@ -2064,8 +2028,7 @@ class AhaApp {
         if (headerUserName) {
             headerUserName.textContent = this.userSettings.profile.name;
         }
-
-        this.showNotification('✅ Configurações salvas com sucesso!', 'success');
+        
     }
 
     loadSettings() {
@@ -2496,61 +2459,189 @@ class AhaApp {
             }
         }, 5000);
     }
+// ========== SISTEMA PWA - SEQUÊNCIA COMPLETA DE TOASTS MOTIVACIONAIS ==========
+setupPWAInstall() {
+    if (this._pwaInstalled) return;
+    this._pwaInstalled = true;
 
-    // ========== SISTEMA PWA ==========
-    setupPWAInstall() {
-        let deferredPrompt;
+    let deferredPrompt = null;
+    let installContainer = null;
+    let stepsShown = {
+        firstVisit: false,
+        after10sec: false,
+        afterScroll: false,
+        beforeLeave: false,
+        finalPush: false
+    };
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
+    const isStandalone = () => 
+        window.matchMedia('(display-mode: standalone)').matches || 
+        window.navigator.standalone === true;
 
-            // Mostrar botão de instalação
-            this.showInstallButton(deferredPrompt);
-        });
+    if (isStandalone()) return;
 
-        window.addEventListener('appinstalled', () => {
-            this.showNotification('🎉 App instalado com sucesso!', 'success');
-            deferredPrompt = null;
-        });
-    }
+    // Toast personalizado (reutilizável)
+    const createToast = (message, buttonText = null, type = 'info') => {
+        // Evita duplicatas
+        if (document.querySelector(`[data-toast="${message.slice(0,30)}"]`)) return;
 
-    showInstallButton(deferredPrompt) {
-        // Verificar se já não existe um botão
-        if (document.querySelector('.install-pwa-btn')) return;
-
-        const installButton = document.createElement('button');
-        installButton.className = 'install-pwa-btn';
-        installButton.innerHTML = '<i class="fas fa-download"></i> Instalar App';
-        installButton.style.cssText = `
+        const toast = document.createElement('div');
+        toast.dataset.toast = message.slice(0,30);
+        toast.style.cssText = `
             position: fixed;
-            bottom: 80px;
-            right: 20px;
-            background: var(--primary-color);
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20,20,30,0.98);
             color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            z-index: 10000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            font-size: 14px;
-            animation: pulse 2s infinite;
+            padding: 16px 24px;
+            border-radius: 50px;
+            z-index: 9999;
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: 90%;
         `;
 
-        installButton.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    installButton.remove();
+        const icon = type === 'success' ? '🎉' : type === 'warning' ? '⚡' : '📲';
+
+        toast.innerHTML = `
+            <div style="font-size: 32px;">${icon}</div>
+            <div>
+                <strong>${message}</strong>
+                ${buttonText ? `<button id="toastBtn" style="
+                    background: #4CAF50; color: white; border: none;
+                    padding: 8px 20px; border-radius: 30px; margin-left: 16px;
+                    font-weight: bold; cursor: pointer; font-size: 14px;
+                ">${buttonText}</button>` : ''}
+                <button style="
+                    background: none; border: none; color: #aaa;
+                    font-size: 28px; cursor: pointer; margin-left: 12px;
+                    width: 36px; height: 36px; display: flex;
+                    align-items: center; justify-content: center;
+                ">×</button>
+            </div>
+            <style>
+                @keyframes slideUp {
+                    from { transform: translateX(-50%) translateY(80px); opacity: 0; }
+                    to { transform: translateX(-50%) translateY(0); opacity: 1; }
                 }
-                deferredPrompt = null;
+            </style>
+        `;
+
+        document.body.appendChild(toast);
+
+        // Fechar
+        toast.querySelector('button:last-child').onclick = () => toast.remove();
+        if (buttonText) {
+            toast.querySelector('#toastBtn').onclick = () => {
+                if (deferredPrompt) deferredPrompt.prompt();
+                toast.remove();
+            };
+        }
+
+        // Auto remover
+        setTimeout(() => toast.style.opacity && toast.remove(), 12000);
+    };
+
+    // Cria botão flutuante (só aparece depois do beforeinstallprompt)
+    const createFloatingButton = () => {
+        if (installContainer) return;
+        installContainer = document.createElement('div');
+        installContainer.innerHTML = `
+            <button id="ahaBtnInstalar" type="button" aria-label="Instalar Aha! Academy" style="
+                position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white; border: none; border-radius: 50%;
+                width: 64px; height: 64px; font-size: 28px;
+                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+                cursor: pointer; animation: float 3s ease-in-out infinite;
+            ">↓</button>
+            <style>
+                @keyframes float {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-10px); }
+                }
+            </style>
+        `;
+        document.body.appendChild(installContainer);
+
+        installContainer.onclick = () => deferredPrompt?.prompt();
+    };
+
+    // Sequência de toasts motivacionais
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        createFloatingButton();
+
+        // 1º Toast - Boas-vindas (3s após carregar)
+        setTimeout(() => {
+            if (!stepsShown.firstVisit) {
+                stepsShown.firstVisit = true;
+                createToast('Bem-vindo à Aha! Academy! 💜', 'Instalar App', 'info');
+            }
+        }, 3000);
+
+        // 2º Toast - Benefícios offline
+        setTimeout(() => {
+            if (!stepsShown.after10sec) {
+                stepsShown.after10sec = true;
+                createToast('Estude sem internet! Salve as aulas no celular 📶', 'Instalar Agora', 'info');
+            }
+        }, 12000);
+
+        // 3º Toast - Após rolar a página (engajamento)
+        let scrolled = false;
+        window.addEventListener('scroll', () => {
+            if (!scrolled && window.scrollY > 500) {
+                scrolled = true;
+                createToast('Gostou? Instale o app e leve a Aha! pra sempre com você 🌟', 'Instalar Grátis', 'info');
+            }
+        }, { once: true });
+
+        // 4º Toast - Quando tentar sair da página (exit intent)
+        let mouseLeft = false;
+        document.addEventListener('mouseleave', () => {
+            if (!mouseLeft && !stepsShown.beforeLeave) {
+                mouseLeft = true;
+                stepsShown.beforeLeave = true;
+                createToast('Ei, não vai embora sem instalar o app! Acesso instantâneo sempre ⚡', 'Instalar Antes de Sair', 'warning');
             }
         });
+    });
 
-        document.body.appendChild(installButton);
-    }
+    // Toast FINAL quando aceitar instalar
+    window.addEventListener('appinstalled', () => {
+        createToast('PARABÉNS! App Aha! Academy instalado com sucesso! 🎉', null, 'success');
+        this.showNotification('✅ App instalado! Agora você tem a Aha! no seu celular para sempre!', 'success');
+
+        // Remove botão flutuante
+        installContainer?.remove();
+    });
+
+    // Feedback se cancelar
+    document.addEventListener('click', async (e) => {
+        if (e.target.closest('#ahaBtnInstalar') || e.target.id === 'toastBtn') {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+
+            if (outcome === 'accepted') {
+                createToast('Instalando o app... quase lá! 🚀', null, 'info');
+            } else {
+                createToast('Tudo bem! Você pode instalar depois no menu do navegador 😊', null, 'info');
+            }
+            deferredPrompt = null;
+        }
+    });
+}
 
     // ========== SERVICE WORKER ==========
     setupServiceWorker() {
@@ -2577,7 +2668,7 @@ class AhaApp {
         });
     }
 
-    // ========== SISTEMA DE LOADING ==========
+        // ========== SISTEMA DE LOADING ==========
     hideLoading() {
         setTimeout(() => {
             const loading = document.getElementById('loading-screen');
@@ -2588,6 +2679,59 @@ class AhaApp {
                 }, 500);
             }
         }, 1500);
+    }
+
+    // ========== CONFIGURAÇÕES - AÇÕES REAIS ==========
+    setupSettingsActions() {
+    // SALVAR ALTERAÇÕES - COM FEEDBACK VISUAL INCRÍVEL
+        document.getElementById('save-settings-btn')?.addEventListener('click', function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+
+            // 1. Muda para "Salvando..."
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+
+            // Atualiza as configurações
+            ahaApp.userSettings.preferences.darkMode = document.getElementById('dark-mode').checked;
+            ahaApp.userSettings.preferences.emailNotifications = document.getElementById('email-notifications').checked;
+            ahaApp.userSettings.preferences.autoplay = document.getElementById('autoplay').checked;
+            ahaApp.userSettings.preferences.profileVisibility = document.getElementById('profile-visibility').value;
+
+            // Salva
+            localStorage.setItem('ahaUserSettings', JSON.stringify(ahaApp.userSettings));
+            ahaApp.applyDarkMode();
+
+            // 2. Muda para "Salvo ✓" por 2 segundos
+            btn.innerHTML = '<i class="fas fa-check"></i> Salvo!';
+            btn.style.background = '#45a049'; // verde mais forte
+
+            ahaApp.showNotification('✅ Configurações salvas com sucesso!', 'success');
+
+            // 3. Volta ao normal depois de 2 segundos
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                btn.style.background = ''; // volta à cor original
+            }, 2000);
+        });
+
+        // EXCLUIR CONTA (com segurança máxima)
+        document.getElementById('delete-account-btn')?.addEventListener('click', () => {
+            if (!confirm('⚠️ ATENÇÃO: Isso vai apagar TODO o seu progresso para sempre.\nContinuar mesmo assim?')) return;
+
+            const nome = prompt('Para confirmar, digite seu nome completo:');
+            if (nome?.trim() !== this.userSettings.profile.name) {
+                this.showNotification('❌ Nome incorreto. Conta preservada.', 'warning');
+                return;
+            }
+
+            if (!confirm('ÚLTIMA CHANCE!\nDepois disso não tem volta.')) return;
+
+            localStorage.clear();
+            this.showNotification('💔 Conta excluída com sucesso. Até breve!', 'warning');
+            setTimeout(() => location.reload(), 3000);
+        });
     }
 
     // ========== SALVAR PROGRESSO ==========
