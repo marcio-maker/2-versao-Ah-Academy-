@@ -2624,37 +2624,12 @@ setupPWAInstall() {
         setTimeout(() => toast.style.opacity && toast.remove(), 12000);
     };
 
-    // Cria botão flutuante (só aparece depois do beforeinstallprompt)
-    const createFloatingButton = () => {
-        if (installContainer) return;
-        installContainer = document.createElement('div');
-        installContainer.innerHTML = `
-            <button id="ahaBtnInstalar" type="button" aria-label="Instalar Aha! Academy" style="
-                position: fixed; bottom: 20px; right: 20px; z-index: 9999;
-                background: linear-gradient(135deg, #667eea, #764ba2);
-                color: white; border: none; border-radius: 50%;
-                width: 64px; height: 64px; font-size: 28px;
-                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
-                cursor: pointer; animation: float 3s ease-in-out infinite;
-            ">↓</button>
-            <style>
-                @keyframes float {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-10px); }
-                }
-            </style>
-        `;
-        document.body.appendChild(installContainer);
-
-        installContainer.onclick = () => deferredPrompt?.prompt();
-    };
 
     // Sequência de toasts motivacionais
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        createFloatingButton();
-
+        
         // 1º Toast - Boas-vindas (3s após carregar)
         setTimeout(() => {
             if (!stepsShown.firstVisit) {
