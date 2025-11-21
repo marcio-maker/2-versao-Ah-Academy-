@@ -24,7 +24,7 @@
 
     <!-- Icons -->
     <link rel="icon" type="image/png" href="icons/favicon.png">
-    
+
     <!-- CSS -->
     <link rel="stylesheet" href="styles.css">
 
@@ -78,6 +78,7 @@
                 </button>
             </div>
 
+            <!-- NA SIDEBAR - SUBSTITUIR ESTA PARTE -->
             <nav class="sidebar-nav">
                 <div class="menu-items">
                     <a href="#home" class="menu-item active" data-screen="home">
@@ -110,7 +111,6 @@
                     <a href="#configuracoes" class="menu-item" data-screen="configuracoes">
                         <i class="fas fa-cog"></i> Configurações
                     </a>
-                    <div class="menu-items"></div>
 
                     <div class="sidebar-discreet-footer">
                         <p>Desenvolvido por: Marcio Maker</p>
@@ -118,13 +118,14 @@
                             <i class="fab fa-whatsapp"></i>
                         </a>
                     </div>
+                </div> <!-- FECHAR menu-items -->
 
-                    <div class="sidebar-footer">
-                        <button id="logoutButton" class="btn btn-danger btn-full" onclick="ahaApp.logoutUser()">
-                            <i class="fas fa-sign-out-alt"></i> Sair
-                        </button>
-                    </div>
-            </nav>
+                <div class="sidebar-footer">
+                    <button id="logoutButton" class="btn btn-danger btn-full">
+                        <i class="fas fa-sign-out-alt"></i> Sair
+                    </button>
+                </div>
+            </nav> <!-- FECHAR sidebar-nav -->
         </div>
 
         <!-- Sidebar Overlay -->
@@ -247,14 +248,97 @@
 
             <!-- Dashboard Screen -->
             <div id="dashboard-screen" class="app-screen">
-                <div class="screen-header">
-                    <h1>Meu Progresso</h1>
-                    <p>Acompanhe sua jornada de aprendizado</p>
-                </div>
                 <div class="container">
-                    <div id="dashboard-content">
-                        <!-- Dashboard content loaded by JavaScript -->
+                    <section class="dashboard-header">
+                        <h2>Olá, <span id="dashboard-user-name">João!</span></h2>
+                        <p>Bem-vindo de volta! Aqui está seu progresso hoje:</p>
+                    </section>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                            <div class="stat-info">
+                                <h3 id="completed-lessons-count">0</h3>
+                                <p>Aulas concluídas</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                            <div class="stat-info">
+                                <h3 id="total-study-time">0min</h3>
+                                <p>Tempo total de estudo</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-fire"></i></div>
+                            <div class="stat-info">
+                                <h3 id="study-streak">7</h3>
+                                <p>Streak atual <small>dias seguidos</small></p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                            <div class="stat-info">
+                                <h3>12</h3>
+                                <p>Conquistas</p>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Progresso Geral -->
+                    <section class="progress-section">
+                        <h3>Seu Progresso Geral</h3>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 0%"></div>
+                            </div>
+                            <p class="progress-text">0% concluído</p>
+                        </div>
+                    </section>
+
+                    <!-- Continuar Aprendendo -->
+                    <section class="continue-learning">
+                        <h3>Continuar de onde parou</h3>
+                        <div class="continue-card">
+                            <div class="continue-image">
+                                <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                                    alt="Curso">
+                            </div>
+                            <div class="continue-info">
+                                <h4>Liderança Consciente</h4>
+                                <p id="last-lesson-name">Nenhuma aula assistida ainda</p>
+                                <div class="progress-mini">
+                                    <div class="progress-fill-mini" style="width: 65%"></div>
+                                </div>
+                                <button class="btn btn-primary btn-sm" data-navigate="plataforma">
+                                    <i class="fas fa-play"></i> Continuar Assistindo
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Conquistas Recentes -->
+                    <section class="achievements-section">
+                        <h3>Conquistas Recentes</h3>
+                        <div class="achievements-grid">
+                            <div class="achievement-item locked">
+                                <i class="fas fa-lock"></i>
+                                <p>Primeira Aula</p>
+                            </div>
+                            <div class="achievement-item unlocked">
+                                <i class="fas fa-medal"></i>
+                                <p>Iniciante</p>
+                            </div>
+                            <div class="achievement-item unlocked">
+                                <i class="fas fa-fire"></i>
+                                <p>7 Dias Seguidos</p>
+                            </div>
+                            <div class="achievement-item locked">
+                                <i class="fas fa-lock"></i>
+                                <p>Mestre da Liderança</p>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
 
@@ -430,7 +514,8 @@
                                     <div class="timeline-ano">2018</div>
                                     <div class="timeline-content">
                                         <h3>O Início</h3>
-                                        <p>Anita Prado começou com workshops presenciais para pequenas empresas, identificando
+                                        <p>Anita Prado começou com workshops presenciais para pequenas empresas,
+                                            identificando
                                             a carência por treinamentos acessíveis em liderança.</p>
                                     </div>
                                 </div>
@@ -558,7 +643,7 @@
                         <div class="plataforma-header">
                             <div>
                                 <h3>Liderança Consciente - Módulo 3</h3>
-                                <p>Aula 5: Escuta Ativa e Empática</p>
+                                <p>Aula 1: Escuta Ativa e Empática</p>
                             </div>
                             <div class="progress-info">
                                 <span>Progresso: <span id="progress-percent">65%</span></span>
@@ -588,404 +673,391 @@
                                 </div>
                             </div>
 
+
                             <div class="content-area">
                                 <div class="video-container">
+
                                     <div class="video-placeholder" id="video-placeholder">
-                                        <i class="fas fa-play-circle"></i>
+                                        <i class="fas fa-play-circle fa-4x"></i>
                                         <p>Selecione uma aula para começar</p>
                                     </div>
+
                                     <div class="video-player" id="video-player" style="display: none;">
                                         <div class="youtube-video" id="youtube-video">
-                                            <!-- YouTube iframe será inserido via JavaScript -->
-                                            <!-- Adicione esta seção após o video-player -->
-                                            <div class="lesson-container">
-                                                <div class="lesson-header">
-                                                    <h2 id="lesson-title">Selecione uma aula para começar</h2>
-                                                    <div class="lesson-meta">
-                                                        <span id="lesson-duration"><i class="fas fa-clock"></i>
-                                                            Duração</span>
-                                                        <span id="lesson-instructor"><i class="fas fa-user"></i>
-                                                            Instrutor</span>
-                                                        <span id="lesson-progress"><i class="fas fa-chart-line"></i>
-                                                            Progresso</span>
-                                                    </div>
-                                                </div>
-
-                                                <div class="lesson-content">
-                                                    <div id="video-placeholder" class="video-placeholder">
-                                                        <i class="fas fa-play-circle fa-4x"></i>
-                                                        <h3>Selecione uma aula para começar</h3>
-                                                        <p>Escolha uma aula na lista ao lado para iniciar seu
-                                                            aprendizado</p>
-                                                    </div>
-
-                                                    <div id="video-player" class="video-player" style="display: none;">
-                                                        <div class="video-container">
-                                                            <div id="youtube-video" class="youtube-video">
-                                                                <!-- Player do YouTube será injetado aqui -->
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="video-controls">
-                                                            <div class="speed-controls">
-                                                                <span>Velocidade:</span>
-                                                                <button class="speed-btn"
-                                                                    data-speed="0.75">0.75x</button>
-                                                                <button class="speed-btn active"
-                                                                    data-speed="1">1x</button>
-                                                                <button class="speed-btn"
-                                                                    data-speed="1.25">1.25x</button>
-                                                                <button class="speed-btn" data-speed="1.5">1.5x</button>
-                                                                <button class="speed-btn" data-speed="2">2x</button>
-                                                            </div>
-                                                            <button class="btn btn-outline" onclick="ahaApp.takeNote()">
-                                                                <i class="fas fa-sticky-note"></i> Adicionar Nota
-                                                            </button>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="lesson-description-container">
-                                                        <h4>Descrição da Aula</h4>
-                                                        <p id="lesson-description" class="lesson-description">
-                                                            Selecione uma aula para ver sua descrição...
-                                                        </p>
-                                                    </div>
-
-                                                    <div id="lesson-resources" class="lesson-resources"
-                                                        style="display: none;">
-                                                        <!-- Recursos serão injetados aqui -->
-                                                    </div>
-
-                                                    <div id="completion-section">
-                                                        <!-- Seção de conclusão será injetada aqui -->
-                                                    </div>
-                                                </div>
-
-                                                <div id="lesson-actions" class="lesson-navigation"
-                                                    style="display: none;">
-                                                    <button id="prev-lesson" class="nav-btn prev"
-                                                        onclick="ahaApp.navigateLesson('prev')">
-                                                        <i class="fas fa-arrow-left"></i> Aula Anterior
-                                                    </button>
-
-                                                    <button id="mark-completed-btn" class="btn btn-success">
-                                                        <i class="fas fa-check"></i> Marcar como Concluída
-                                                    </button>
-
-                                                    <button id="next-lesson" class="nav-btn next"
-                                                        onclick="ahaApp.navigateLesson('next')">
-                                                        Próxima Aula <i class="fas fa-arrow-right"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
+                                            <iframe width="100%" height="100%"
+                                                src="https://www.youtube.com/embed/KKqVKa1s1yY" title="Vídeo da Aula"
+                                                frameborder="0"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                allowfullscreen>
+                                            </iframe>
                                         </div>
                                     </div>
                                 </div>
-
-                                <div class="lesson-info" id="lesson-info">
-                                    <h3 class="lesson-title" id="lesson-title">Selecione uma aula</h3>
-                                    <p class="lesson-description" id="lesson-description">Escolha uma aula da lista ao
-                                        lado para ver os detalhes e assistir ao conteúdo.</p>
-
-                                    <div class="lesson-actions" id="lesson-actions" style="display: none;">
-                                        <button class="btn" id="download-material">
-                                            <i class="fas fa-download"></i> Material de Apoio
-                                        </button>
-                                        <button class="btn" id="show-quiz-btn">
-                                            <i class="fas fa-question-circle"></i> Fazer Quiz
-                                        </button>
-                                        <button class="btn btn-success" id="complete-lesson">
-                                            <i class="fas fa-check"></i> Aula Concluída
-                                        </button>
-                                        <button class="btn btn-primary" id="next-lesson">
-                                            <i class="fas fa-forward"></i> Próxima Aula
-                                        </button>
+                                <div class="video-controls">
+                                    <div class="speed-controls">
+                                        <span>Velocidade:</span>
+                                        <button class="speed-btn" data-speed="0.75">0.75x</button>
+                                        <button class="speed-btn active" data-speed="1">1x</button>
+                                        <button class="speed-btn" data-speed="1.25">1.25x</button>
+                                        <button class="speed-btn" data-speed="1.5">1.5x</button>
+                                        <button class="speed-btn" data-speed="2">2x</button>
                                     </div>
-                                </div>
-
-                                <!-- Quiz Section -->
-                                <div class="quiz-section" id="quiz-section" style="display: none;">
-                                    <div class="quiz-header">
-                                        <h3>Quiz - Escuta Ativa</h3>
-                                        <p>Teste seu conhecimento sobre o conteúdo aprendido</p>
-                                    </div>
-
-                                    <div class="quiz-content">
-                                        <div class="quiz-question" id="quiz-question-1">
-                                            <h4>Questão 1 de 2</h4>
-                                            <p>Qual é a principal característica da escuta ativa?</p>
-                                            <div class="quiz-options">
-                                                <label class="quiz-option">
-                                                    <input type="radio" name="question1" value="a">
-                                                    <span>Interromper a pessoa para dar sua opinião</span>
-                                                </label>
-                                                <label class="quiz-option">
-                                                    <input type="radio" name="question1" value="b">
-                                                    <span>Ouvir com atenção total e demonstrar compreensão</span>
-                                                </label>
-                                                <label class="quiz-option">
-                                                    <input type="radio" name="question1" value="c">
-                                                    <span>Ficar em silêncio sem demonstrar reação</span>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <div class="quiz-question" id="quiz-question-2" style="display: none;">
-                                            <h4>Questão 2 de 2</h4>
-                                            <p>Qual técnica NÃO faz parte da escuta ativa?</p>
-                                            <div class="quiz-options">
-                                                <label class="quiz-option">
-                                                    <input type="radio" name="question2" value="a">
-                                                    <span>Parafrasear o que foi dito</span>
-                                                </label>
-                                                <label class="quiz-option">
-                                                    <input type="radio" name="question2" value="b">
-                                                    <span>Fazer perguntas abertas</span>
-                                                </label>
-                                                <label class="quiz-option">
-                                                    <input type="radio" name="question2" value="c">
-                                                    <span>Julgamento imediato das ideias</span>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <div class="quiz-actions">
-                                            <button class="btn btn-outline" id="prev-question" style="display: none;">
-                                                <i class="fas fa-arrow-left"></i> Anterior
-                                            </button>
-                                            <button class="btn btn-primary" id="next-question">
-                                                Próxima <i class="fas fa-arrow-right"></i>
-                                            </button>
-                                            <button class="btn btn-success" id="submit-quiz" style="display: none;">
-                                                <i class="fas fa-paper-plane"></i> Finalizar Quiz
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Quiz Results -->
-                                <div class="quiz-results" id="quiz-results" style="display: none;">
-                                    <div class="results-header">
-                                        <i class="fas fa-trophy"></i>
-                                        <h3>Quiz Concluído!</h3>
-                                    </div>
-                                    <div class="results-content">
-                                        <div class="score-circle">
-                                            <span id="quiz-score">0%</span>
-                                        </div>
-                                        <p id="quiz-message">Sua pontuação no quiz</p>
-                                        <div class="results-actions">
-                                            <button class="btn btn-outline" id="review-quiz">
-                                                <i class="fas fa-redo"></i> Revisar Respostas
-                                            </button>
-                                            <button class="btn btn-primary" id="close-quiz">
-                                                <i class="fas fa-check"></i> Continuar Aula
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Contato Screen -->
-            <div id="contato-screen" class="app-screen">
-                <div class="screen-header">
-                    <h1>Entre em Contato</h1>
-                    <p>Estamos aqui para ajudar no seu desenvolvimento</p>
-                </div>
-                <div class="container">
-                    <div class="contact-content">
-                        <div class="contact-info">
-                            <div class="contact-item">
-                                <i class="fas fa-envelope"></i>
-                                <div>
-                                    <h3>Email</h3>
-                                    <p>contato@ahaacademy.com</p>
-                                </div>
-                            </div>
-                            <div class="contact-item">
-                                <i class="fas fa-phone"></i>
-                                <div>
-                                    <h3>Telefone</h3>
-                                    <p>(11) 99999-7075</p>
-                                </div>
-                            </div>
-                            <div class="contact-item">
-                                <i class="fas fa-clock"></i>
-                                <div>
-                                    <h3>Horário de Atendimento</h3>
-                                    <p>Segunda a Sexta, 9h às 18h</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <form id="contact-form" class="contact-form">
-                            <div class="form-group">
-                                <label for="contact-name">Nome Completo</label>
-                                <input type="text" id="contact-name" name="name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="contact-email">Email</label>
-                                <input type="email" id="contact-email" name="email" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="contact-subject">Assunto</label>
-                                <select id="contact-subject" name="subject" required>
-                                    <option value="">Selecione...</option>
-                                    <option value="duvida">Dúvida sobre cursos</option>
-                                    <option value="suporte">Suporte técnico</option>
-                                    <option value="parceria">Parceria empresarial</option>
-                                    <option value="outro">Outro</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="contact-message">Mensagem</label>
-                                <textarea id="contact-message" name="message" rows="5" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-block">
-                                <i class="fas fa-paper-plane"></i> Enviar Mensagem
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Configurações Screen -->
-            <div id="configuracoes-screen" class="app-screen">
-                <div class="screen-header">
-                    <h1>Configurações</h1>
-                    <p>Gerencie sua conta e preferências</p>
-                </div>
-                <div class="container">
-                    <div class="configuracoes-content">
-                        <!-- Perfil Section -->
-                        <div class="config-section">
-                            <h2><i class="fas fa-user"></i> Perfil</h2>
-                            <div class="profile-settings">
-                                <div class="photo-upload">
-                                    <div class="current-photo">
-                                        <img id="current-user-photo"
-                                            src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80"
-                                            alt="Foto atual">
-                                        <div class="photo-overlay">
-                                            <i class="fas fa-camera"></i>
-                                            <span>Alterar</span>
-                                        </div>
-                                    </div>
-                                    <input type="file" id="photo-input" accept="image/*" style="display: none;">
-                                    <div class="photo-actions">
-                                        <button type="button" class="btn btn-outline" id="take-photo-btn">
-                                            <i class="fas fa-camera"></i> Tirar Foto
-                                        </button>
-                                        <button type="button" class="btn btn-outline" id="choose-photo-btn">
-                                            <i class="fas fa-image"></i> Escolher da Galeria
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="profile-form">
-                                    <div class="form-group">
-                                        <label for="user-name">Nome Completo</label>
-                                        <input type="text" id="user-name" value="João Silva">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="user-email">Email</label>
-                                        <input type="email" id="user-email" value="joao@email.com">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="user-phone">Telefone</label>
-                                        <input type="tel" id="user-phone" value="(11) 99999-9999">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="user-bio">Biografia</label>
-                                        <textarea id="user-bio" rows="3"
-                                            placeholder="Conte um pouco sobre você...">Apaixonado por aprendizado e desenvolvimento pessoal!</textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Preferências Section -->
-                        <div class="config-section">
-                            <h2><i class="fas fa-cog"></i> Preferências</h2>
-                            <div class="preferences-grid">
-                                <div class="preference-item">
-                                    <div class="preference-info">
-                                        <h4>Notificações por Email</h4>
-                                        <p>Receba atualizações sobre novos cursos</p>
-                                    </div>
-                                    <label class="switch">
-                                        <input type="checkbox" id="email-notifications" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                                <div class="preference-item">
-                                    <div class="preference-info">
-                                        <h4>Modo Escuro</h4>
-                                        <p>Interface com tema escuro</p>
-                                    </div>
-                                    <label class="switch">
-                                        <input type="checkbox" id="dark-mode">
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                                <div class="preference-item">
-                                    <div class="preference-info">
-                                        <h4>Reprodução Automática</h4>
-                                        <p>Próxima aula inicia automaticamente</p>
-                                    </div>
-                                    <label class="switch">
-                                        <input type="checkbox" id="autoplay" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Privacidade Section -->
-                        <div class="config-section">
-                            <h2><i class="fas fa-shield-alt"></i> Privacidade</h2>
-                            <div class="privacy-options">
-                                <div class="privacy-item">
-                                    <h4>Perfil Público</h4>
-                                    <p>Outros alunos podem ver seu perfil</p>
-                                    <select id="profile-visibility">
-                                        <option value="public">Público</option>
-                                        <option value="private">Privado</option>
-                                        <option value="contacts">Apenas Contatos</option>
-                                    </select>
-                                </div>
-                                <div class="privacy-item">
-                                    <h4>Exportar Dados</h4>
-                                    <p>Baixe todos os seus dados da plataforma</p>
-                                    <button type="button" class="btn btn-outline" id="export-data-btn">
-                                        <i class="fas fa-download"></i> Exportar Dados
+                                    <button class="btn btn-outline" onclick="ahaApp.takeNote()">
+                                        <i class="fas fa-sticky-note"></i> Adicionar Nota
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Actions Section -->
-                        <div class="config-section">
-                            <h2><i class="fas fa-exclamation-triangle"></i> Ações</h2>
-                            <div class="action-buttons">
-                                <button type="button" class="btn btn-primary" id="save-settings-btn">
-                                    <i class="fas fa-save"></i> Salvar Alterações
-                                </button>
-                                <button type="button" class="btn btn-outline" id="reset-settings-btn">
-                                    <i class="fas fa-undo"></i> Restaurar Padrões
-                                </button>
-                                <button type="button" class="btn btn-danger" id="delete-account-btn">
-                                    <i class="fas fa-trash"></i> Excluir Conta
+                        <div class="lesson-info" id="lesson-info">
+                            <h3 class="lesson-title" id="lesson-title">Selecione uma aula</h3>
+
+                            <div class="lesson-meta">
+                                <span id="lesson-duration"><i class="fas fa-clock"></i> Duração</span>
+                                <span id="lesson-instructor"><i class="fas fa-user"></i> Instrutor</span>
+                                <span id="lesson-progress"><i class="fas fa-chart-line"></i> Progresso</span>
+                            </div>
+
+                            <div class="lesson-description-container">
+                                <h4>Descrição da Aula</h4>
+                                <p id="lesson-description" class="lesson-description">
+                                    Selecione uma aula para ver sua descrição...
+                                </p>
+                            </div>
+
+                            <!-- QUIZ DINÂMICO (CARREGADO VIA API) -->
+                            <div id="quiz-area-dynamic" class="quiz-container" style="display: none;">
+                                <h3>Teste seus Conhecimentos!</h3>
+                                <p>Responda as perguntas abaixo para concluir a aula.</p>
+
+                                <form id="quiz-form-dynamic" onsubmit="event.preventDefault(); ahaApp.submitQuiz();">
+                                    <div id="quiz-questions-dynamic">
+                                        <div class="loading-quiz">Carregando perguntas...</div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-warning mt-3">
+                                        <i class="fas fa-paper-plane"></i> Enviar Respostas
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- RECURSOS -->
+                            <div id="lesson-resources" class="lesson-resources" style="display: none;"></div>
+
+                            <!-- QUIZ SIMPLES (PADRÃO) -->
+                            <div id="quiz-area-simple" class="quiz-area" style="display: none;">
+                                <h4>Quiz da Aula</h4>
+
+                                <div id="quiz-questions-simple">
+                                    <p>O quiz será carregado aqui.</p>
+                                </div>
+
+                                <button id="submit-quiz-simple" class="btn btn-primary" onclick="ahaApp.submitQuiz()">
+                                    <i class="fas fa-paper-plane"></i> Enviar Respostas
                                 </button>
                             </div>
+
+                            <div id="completion-section"></div>
                         </div>
-                    </div>
-                </div>
-            </div>
+
+                        <!-- NAVEGAÇÃO ENTRE AULAS -->
+                        <div id="lesson-actions" class="lesson-navigation" style="display: none;">
+                            <button id="prev-lesson" class="nav-btn prev" onclick="ahaApp.navigateLesson('prev')">
+                                <i class="fas fa-arrow-left"></i> Aula Anterior
+                            </button>
+                            <button id="next-lesson" class="nav-btn next" onclick="ahaApp.navigateLesson('next')">
+                                Próxima Aula <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+
+
+                        <!-- QUIZ COMPLETO (PÁGINA SEPARADA) -->
+                        <div class="quiz-section" id="quiz-section" style="display: none;">
+
+                            <div class="quiz-header">
+                                <h3>Quiz - Escuta Ativa</h3>
+                                <p>Teste seu conhecimento sobre o conteúdo aprendido</p>
+                            </div>
+
+                            <div class="quiz-content">
+                                <div class="quiz-question" id="quiz-question-1">
+                                    <h4>Questão 1 de 2</h4>
+                                    <p>Qual é a principal característica da escuta ativa?</p>
+                                    <div class="quiz-options">
+                                        <label class="quiz-option">
+                                            <input type="radio" name="question1" value="a">
+                                            <span>Interromper a pessoa para dar sua opinião</span>
+                                        </label>
+                                        <label class="quiz-option">
+                                            <input type="radio" name="question1" value="b">
+                                            <span>Ouvir com atenção total e demonstrar compreensão</span>
+                                        </label>
+                                        <label class="quiz-option">
+                                            <input type="radio" name="question1" value="c">
+                                            <span>Ficar em silêncio sem demonstrar reação</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="quiz-question" id="quiz-question-2" style="display: none;">
+                                    <h4>Questão 2 de 2</h4>
+                                    <p>Qual técnica NÃO faz parte da escuta ativa?</p>
+                                    <div class="quiz-options">
+                                        <label class="quiz-option">
+                                            <input type="radio" name="question2" value="a">
+                                            <span>Parafrasear o que foi dito</span>
+                                        </label>
+                                        <label class="quiz-option">
+                                            <input type="radio" name="question2" value="b">
+                                            <span>Fazer perguntas abertas</span>
+                                        </label>
+                                        <label class="quiz-option">
+                                            <input type="radio" name="question2" value="c">
+                                            <span>Julgamento imediato das ideias</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="quiz-actions">
+                                    <button class="btn btn-outline" id="prev-question" style="display: none;">
+                                        <i class="fas fa-arrow-left"></i> Anterior
+                                    </button>
+
+                                    <button class="btn btn-primary" id="next-question">
+                                        Próxima <i class="fas fa-arrow-right"></i>
+                                    </button>
+
+                                    <button class="btn btn-success" id="submit-quiz-final" style="display: none;">
+                                        <i class="fas fa-paper-plane"></i> Finalizar Quiz
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- RESULTADOS -->
+                        <div class="quiz-results" id="quiz-results" style="display: none;">
+                            <div class="results-header">
+                                <i class="fas fa-trophy"></i>
+                                <h3>Quiz Concluído!</h3>
+                            </div>
+
+                            <div class="results-content">
+                                <div class="score-circle">
+                                    <span id="quiz-score">0%</span>
+                                </div>
+                                <p id="quiz-message">Sua pontuação no quiz</p>
+
+                                <div class="results-actions">
+                                    <button class="btn btn-outline" id="review-quiz">
+                                        <i class="fas fa-redo"></i> Revisar Respostas
+                                    </button>
+
+                                    <button class="btn btn-primary" id="close-quiz">
+                                        <i class="fas fa-check"></i> Continuar Aula
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- Contato Screen -->
+                        <div id="contato-screen" class="app-screen">
+                            <div class="screen-header">
+                                <h1>Entre em Contato</h1>
+                                <p>Estamos aqui para ajudar no seu desenvolvimento</p>
+                            </div>
+                            <div class="container">
+                                <div class="contact-content">
+                                    <div class="contact-info">
+                                        <div class="contact-item">
+                                            <i class="fas fa-envelope"></i>
+                                            <div>
+                                                <h3>Email</h3>
+                                                <p>contato@ahaacademy.com</p>
+                                            </div>
+                                        </div>
+                                        <div class="contact-item">
+                                            <i class="fas fa-phone"></i>
+                                            <div>
+                                                <h3>Telefone</h3>
+                                                <p>(11) 99999-7075</p>
+                                            </div>
+                                        </div>
+                                        <div class="contact-item">
+                                            <i class="fas fa-clock"></i>
+                                            <div>
+                                                <h3>Horário de Atendimento</h3>
+                                                <p>Segunda a Sexta, 9h às 18h</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <form id="contact-form" class="contact-form">
+                                        <div class="form-group">
+                                            <label for="contact-name">Nome Completo</label>
+                                            <input type="text" id="contact-name" name="name" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="contact-email">Email</label>
+                                            <input type="email" id="contact-email" name="email" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="contact-subject">Assunto</label>
+                                            <select id="contact-subject" name="subject" required>
+                                                <option value="">Selecione...</option>
+                                                <option value="duvida">Dúvida sobre cursos</option>
+                                                <option value="suporte">Suporte técnico</option>
+                                                <option value="parceria">Parceria empresarial</option>
+                                                <option value="outro">Outro</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="contact-message">Mensagem</label>
+                                            <textarea id="contact-message" name="message" rows="5" required></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-block">
+                                            <i class="fas fa-paper-plane"></i> Enviar Mensagem
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Configurações Screen -->
+                        <div id="configuracoes-screen" class="app-screen">
+                            <div class="screen-header">
+                                <h1>Configurações</h1>
+                                <p>Gerencie sua conta e preferências</p>
+                            </div>
+                            <div class="container">
+                                <div class="configuracoes-content">
+                                    <!-- Perfil Section -->
+                                    <div class="config-section">
+                                        <h2><i class="fas fa-user"></i> Perfil</h2>
+                                        <div class="profile-settings">
+                                            <div class="photo-upload">
+                                                <div class="current-photo">
+                                                    <img id="current-user-photo"
+                                                        src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80"
+                                                        alt="Foto atual">
+                                                    <div class="photo-overlay">
+                                                        <i class="fas fa-camera"></i>
+                                                        <span>Alterar</span>
+                                                    </div>
+                                                </div>
+                                                <input type="file" id="photo-input" accept="image/*"
+                                                    style="display: none;">
+                                                <div class="photo-actions">
+                                                    <button type="button" class="btn btn-outline" id="take-photo-btn">
+                                                        <i class="fas fa-camera"></i> Tirar Foto
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline" id="choose-photo-btn">
+                                                        <i class="fas fa-image"></i> Escolher da Galeria
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="profile-form">
+                                                <div class="form-group">
+                                                    <label for="user-name">Nome Completo</label>
+                                                    <input type="text" id="user-name" value="João Silva">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="user-email">Email</label>
+                                                    <input type="email" id="user-email" value="joao@email.com">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="user-phone">Telefone</label>
+                                                    <input type="tel" id="user-phone" value="(11) 99999-9999">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="user-bio">Biografia</label>
+                                                    <textarea id="user-bio" rows="3"
+                                                        placeholder="Conte um pouco sobre você...">Apaixonado por aprendizado e desenvolvimento pessoal!</textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Preferências Section -->
+                                    <div class="config-section">
+                                        <h2><i class="fas fa-cog"></i> Preferências</h2>
+                                        <div class="preferences-grid">
+                                            <div class="preference-item">
+                                                <div class="preference-info">
+                                                    <h4>Notificações por Email</h4>
+                                                    <p>Receba atualizações sobre novos cursos</p>
+                                                </div>
+                                                <label class="switch">
+                                                    <input type="checkbox" id="email-notifications" checked>
+                                                    <span class="slider"></span>
+                                                </label>
+                                            </div>
+                                            <div class="preference-item">
+                                                <div class="preference-info">
+                                                    <h4>Modo Escuro</h4>
+                                                    <p>Interface com tema escuro</p>
+                                                </div>
+                                                <label class="switch">
+                                                    <input type="checkbox" id="dark-mode">
+                                                    <span class="slider"></span>
+                                                </label>
+                                            </div>
+                                            <div class="preference-item">
+                                                <div class="preference-info">
+                                                    <h4>Reprodução Automática</h4>
+                                                    <p>Próxima aula inicia automaticamente</p>
+                                                </div>
+                                                <label class="switch">
+                                                    <input type="checkbox" id="autoplay" checked>
+                                                    <span class="slider"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Privacidade Section -->
+                                    <div class="config-section">
+                                        <h2><i class="fas fa-shield-alt"></i> Privacidade</h2>
+                                        <div class="privacy-options">
+                                            <div class="privacy-item">
+                                                <h4>Perfil Público</h4>
+                                                <p>Outros alunos podem ver seu perfil</p>
+                                                <select id="profile-visibility">
+                                                    <option value="public">Público</option>
+                                                    <option value="private">Privado</option>
+                                                    <option value="contacts">Apenas Contatos</option>
+                                                </select>
+                                            </div>
+                                            <div class="privacy-item">
+                                                <h4>Exportar Dados</h4>
+                                                <p>Baixe todos os seus dados da plataforma</p>
+                                                <button type="button" class="btn btn-outline" id="export-data-btn">
+                                                    <i class="fas fa-download"></i> Exportar Dados
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Actions Section -->
+                                    <div class="config-section">
+                                        <h2><i class="fas fa-exclamation-triangle"></i> Ações</h2>
+                                        <div class="action-buttons">
+                                            <button type="button" class="btn btn-primary" id="save-settings-btn">
+                                                <i class="fas fa-save"></i> Salvar Alterações
+                                            </button>
+                                            <button type="button" class="btn btn-outline" id="reset-settings-btn">
+                                                <i class="fas fa-undo"></i> Restaurar Padrões
+                                            </button>
+                                            <button type="button" class="btn btn-danger" id="delete-account-btn">
+                                                <i class="fas fa-trash"></i> Excluir Conta
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
         </main>
 
         <!-- Mobile Bottom Navigation -->

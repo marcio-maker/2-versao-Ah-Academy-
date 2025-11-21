@@ -1,21 +1,25 @@
-// sw.js - Service Worker para Aha! Academy PWA
-const CACHE_NAME = 'aha-academy-v1.0.0';
+const CACHE_NAME = 'aha-academy-v1.0.1';
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/styles.css',
+  '/app.js',
+  '/manifest.json',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png'
+];
 
-// Instalação do Service Worker
-self.addEventListener('install', (event) => {
-  console.log('✅ Service Worker instalando...');
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+  );
   self.skipWaiting();
 });
 
-// Ativação do Service Worker
-self.addEventListener('activate', (event) => {
-  console.log('🔄 Service Worker ativado');
-  event.waitUntil(self.clients.claim());
-});
-
-// Interceptação de requisições
-self.addEventListener('fetch', (event) => {
-  // Para desenvolvimento, não cacheamos nada
-  // Em produção, você pode adicionar estratégias de cache aqui
-  return;
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
+    })
+  );
 });

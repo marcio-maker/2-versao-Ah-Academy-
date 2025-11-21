@@ -615,6 +615,32 @@ p { margin-bottom: 1rem; }
     background: var(--bg-light);
 }
 
+
+/* ===== CURSOS SCREEN ===== */
+.search-bar {
+    display: flex;
+    align-items: center;
+    background: var(--bg-white);
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    box-shadow: var(--shadow);
+    margin: 1.5rem 0 2rem;
+}
+
+.search-bar input {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    padding: 0.5rem 0.5rem;
+    font-size: 1rem;
+    background: transparent;
+}
+
+.search-bar i {
+    color: var(--text-light);
+    font-size: 1.1rem;
+}
+
 .section-title {
     text-align: center;
     margin-bottom: 3rem;
@@ -730,6 +756,22 @@ p { margin-bottom: 1rem; }
     margin-bottom: 2rem;
 }
 
+
+.dashboard-greeting {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, var(--primary-color), #6dd5ed);
+    color: white;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-hover);
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
 .stat-card {
     background: var(--bg-white);
     padding: 1.5rem;
@@ -780,6 +822,27 @@ p { margin-bottom: 1rem; }
     border-radius: var(--border-radius);
     margin-top: 1rem;
     transition: var(--transition);
+    justify-content: space-between;
+}
+
+
+.continue-action-button {
+    /* 1. Impede que o botão encolha quando o espaço for limitado */
+    flex-shrink: 0; 
+    
+    /* 2. Estilos do botão */
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 50px; /* Estilo pill-button */
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.continue-action-button:hover {
+    background-color: var(--primary-dark);
 }
 
 .continue-card:hover {
@@ -806,6 +869,56 @@ p { margin-bottom: 1rem; }
     font-size: 0.9rem;
 }
 
+/* styles.css: Correção para a imagem no card "Continuar de onde parou" */
+
+.continue-image {
+    width: 100px;
+    height: 100px;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.continue-image img {
+    width: 100%;
+    height: 100%;
+    /* CORREÇÃO: Usa 'cover' para preencher o contêiner quadrado (100x100) 
+       sem distorção, cortando as bordas, se a proporção original for diferente. */
+    object-fit: cover; 
+}
+
+.greeting-content {
+    max-width: 60%;
+    z-index: 1; /* Garante que o texto fique acima da imagem */
+}
+
+.greeting-content h2 {
+    color: white;
+    margin-bottom: 0.25rem;
+    font-size: 1.5rem;
+}
+
+.greeting-content p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+.greeting-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    flex-shrink: 0;
+}
+
+.greeting-image img {
+    /* CSS para tornar a imagem responsiva e proporcional */
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* ESSENCIAL: Mantém a proporção e preenche o container */
+}
 /* ===== CURSOS SCREEN ===== */
 .filters-section {
     background: var(--bg-white);
@@ -1404,6 +1517,119 @@ p { margin-bottom: 1rem; }
     color: var(--primary-color);
 }
 
+.progress-card {
+    background: var(--bg-white);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.progress-bar-large {
+    height: 10px; /* Mais espessa que a barra lateral */
+    background: var(--bg-light);
+    border-radius: 5px;
+    margin: 1rem 0 0.5rem;
+    overflow: hidden;
+}
+
+.progress-bar-large .progress-fill {
+    height: 100%;
+    background: var(--primary-color);
+    transition: width 0.5s ease-in-out;
+}
+
+.progress-bar-small {
+    height: 6px;
+    background: var(--bg-light);
+    border-radius: 3px;
+    margin: 0.5rem 0;
+    overflow: hidden;
+}
+
+.progress-card .progress-text {
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.progress-bar-small {
+    height: 6px;
+    background: var(--bg-light);
+    border-radius: 3px;
+    margin: 0.5rem 0;
+    overflow: hidden;
+}
+
+.progress-fill-small {
+    height: 100%;
+    background: var(--primary-color);
+    transition: width 0.5s ease-in-out;
+}
+
+.progress-text-small {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.btn-full {
+    width: 100%;
+    text-align: center;
+}
+
+
+.recent-achievements h3 {
+    margin-bottom: 1.5rem;
+}
+
+.achievements-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.achievement-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--bg-white);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    flex: 1 1 calc(50% - 0.5rem); 
+    min-width: 150px;
+    transition: var(--transition);
+    /* MUDANÇA AQUI: de --accent-color para --primary-color (verde) */
+    border-left: 5px solid var(--primary-color); 
+}
+
+.achievement-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.achievement-item i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    flex-shrink: 0;
+}
+
+.achievement-details h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.achievement-details p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+
 /* Quiz Styles */
 .quiz-container {
     background: var(--bg-white);
@@ -1535,6 +1761,62 @@ p { margin-bottom: 1rem; }
 .course-progress .progress-text {
     color: white;
     font-weight: 500;
+}
+
+.course-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 2 ou mais colunas */
+    gap: 2rem;
+}
+
+.course-card {
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+}
+
+.course-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+}
+
+.course-image {
+    width: 100%;
+    height: 180px; /* Altura fixa para as imagens */
+    object-fit: cover; /* ESSENCIAL: Garante que a imagem preencha sem distorção */
+    border-bottom: 3px solid var(--primary-color);
+}
+
+.course-details {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.course-tag {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.course-details h3 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.4rem;
+    color: var(--text-primary);
+}
+
+.course-details p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    flex-grow: 1; /* Empurra o progresso/botão para baixo */
 }
 
 .module-list {
@@ -2880,7 +3162,6 @@ body.dark-mode .methodology-tag:hover {
         flex-direction: row;
         justify-content: center;
     }
-}
 
 @media (max-width: 968px) {
     .fundadora-section {
@@ -3752,6 +4033,7 @@ textarea:focus-visible {
         height: 100px;
         font-size: 1.5rem;
     }
+    
 }
 
 /* Dark Mode para Plataforma */
@@ -3866,5 +4148,37 @@ body.dark-mode .quiz-option {
         flex-wrap: wrap;
         gap: 0.5rem;
         justify-content: center;
+    }
+}
+/* Responsividade Mobile (Corrigindo a Imagem Desproporcional) */
+@media (max-width: 600px) {
+    .dashboard-greeting {
+        flex-direction: column;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .greeting-content {
+        max-width: 100%;
+        order: 2; /* Coloca o conteúdo abaixo da imagem no mobile */
+        margin-top: 1rem;
+    }
+
+    .greeting-image {
+        width: 80px;
+        height: 80px;
+        order: 1; /* Coloca a imagem no topo no mobile */
+    }
+
+    .greeting-content h2 {
+        font-size: 1.3rem;
+    }
+
+    .greeting-content p {
+        font-size: 0.8rem;
+    }
+
+    .achievement-item {
+        flex: 1 1 100%; /* 1 coluna no mobile */
     }
 }

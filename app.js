@@ -5,45 +5,236 @@ class AhaApp {
         this.carouselInterval = null;
         this.currentCarouselIndex = 0;
 
-        // Inicialização ROBUSTA de configurações
+        // Configurações do usuário (deixa igual)
         const savedSettings = localStorage.getItem('ahaUserSettings');
         this.userSettings = savedSettings ? JSON.parse(savedSettings) : {
-            profile: {
-                name: "João Silva",
-                email: "joao@email.com",
-                phone: "(11) 99999-9999",
-                bio: "Apaixonado por aprendizado e desenvolvimento pessoal!"
-            },
-            preferences: {
-                darkMode: false,
-                emailNotifications: true,
-                autoplay: true,
-                profileVisibility: 'public'
-            },
+            profile: { name: "João Silva", email: "joao@email.com", phone: "(11) 99999-9999", bio: "Apaixonado por aprendizado e desenvolvimento pessoal!" },
+            preferences: { darkMode: false, emailNotifications: true, autoplay: true, profileVisibility: 'public' },
             lastScreen: 'home'
         };
 
-        // Sistema de progresso do usuário - INICIALIZAÇÃO CORRIGIDA
+        // ========== PROGRESSO CORRIGIDO E INDESTRUTÍVEL (NOVO) ==========
         const savedProgress = localStorage.getItem('ahaProgress');
         this.userProgress = savedProgress ? JSON.parse(savedProgress) : {
+            enrolledCourses: [1],                    // Começa inscrito no curso 1
             completedLessons: [],
+            quizScores: {},                          // guarda nota do quiz por aula
             lastWatched: null,
-            progressPercentage: 0,
-            totalStudyTime: 0,
-            enrolledCourses: [], // GARANTIR que sempre existe
-            achievements: []
+            studyTime: 0,                            // em minutos
+            startTime: null,                         // para contar sessão atual
+            achievements: [],
+            totalLessonsCompleted: 0,
+            totalLessons: 0,
+            progressPercentage: 0
         };
 
-        // Garantir que enrolledCourses existe
-        if (!this.userProgress.enrolledCourses) {
-            this.userProgress.enrolledCourses = [];
-        }
+        // Garante que nada quebre se o localStorage estiver corrompido
+        if (!Array.isArray(this.userProgress.completedLessons)) this.userProgress.completedLessons = [];
+        if (!this.userProgress.quizScores) this.userProgress.quizScores = {};
+        if (!this.userProgress.enrolledCourses) this.userProgress.enrolledCourses = [1];
 
-        // Dados dos cursos
+        // Inicia contagem de tempo da sessão atual
+        this.userProgress.startTime = Date.now();
+
         this.coursesData = [];
         this.currentLesson = null;
         this.currentCourse = null;
-        this.studyStartTime = null;
+        this.quizData = {
+            // Lição ID: '1.1.1'
+            '1.1.1': [{
+                question: "Qual o principal conceito da Liderança Consciente?",
+                options: ["Foco em lucro", "Autoconhecimento e empatia", "Microgerenciamento", "Delegação total"],
+                answer: "Autoconhecimento e empatia"
+            },
+            {
+                question: "Qual ferramenta é essencial para um PWA funcionar offline?",
+                options: ["Webpack", "Babel", "Service Worker", "React"],
+                answer: "Service Worker"
+            }],
+            // Lição ID: '1.2.3' (Exemplo)
+            '1.2.3': [{
+                question: "O que é escuta ativa?",
+                options: ["Apenas ouvir a outra pessoa", "Interromper para dar soluções", "Ouvir com foco total e dar feedback", "Ficar em silêncio"],
+                answer: "Ouvir com foco total e dar feedback"
+            }]
+        };
+    }
+
+    logoutUser() {
+        if (!confirm('Tem certeza que deseja sair?')) return;
+        localStorage.removeItem('ahaUserSettings');
+        localStorage.removeItem('ahaProgress');
+        this.showNotification('👋 Você saiu da conta!', 'info');
+        setTimeout(() => location.reload(), 1500);
+    }
+
+    // =============================================================
+    // MÉTODOS DE PROGRESSO – COLE AQUI
+    // =============================================================
+
+    updateProgress(lessonId, completed = true, quizScore = null) {
+        if (!lessonId) return;
+
+        if (completed && !this.userProgress.completedLessons.includes(lessonId)) {
+            this.userProgress.completedLessons.push(lessonId);
+            this.userProgress.totalLessonsCompleted = this.userProgress.completedLessons.length;
+            this.playSound('complete');
+        }
+
+        if (quizScore !== null) {
+            this.userProgress.quizScores[lessonId] = quizScore;
+        }
+
+        this.userProgress.lastWatched = lessonId;
+        this.calculateProgressPercentage();
+        this.updateStudyTime();
+        this.saveProgress();
+        this.updateProgressUI();
+    }
+
+    calculateProgressPercentage() {
+        let total = 0;
+        let completed = 0;
+
+        this.coursesData.forEach(course => {
+            if (this.userProgress.enrolledCourses.includes(course.id)) {
+                course.modules.forEach(module => {
+                    total += module.lessons.length;
+                    module.lessons.forEach(lesson => {
+                        if (this.userProgress.completedLessons.includes(lesson.id)) completed++;
+                    });
+                });
+            }
+        });
+
+        this.userProgress.totalLessons = total;
+        this.userProgress.progressPercentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+    }
+
+    updateStudyTime() {
+        if (!this.userProgress.startTime) return;
+        const sessionMinutes = Math.floor((Date.now() - this.userProgress.startTime) / 60000);
+        this.userProgress.studyTime += sessionMinutes;
+        this.userProgress.startTime = Date.now(); // reinicia contagem
+    }
+
+    updateProgressUI() {
+        // Barra de progresso geral
+        const bar = document.querySelector('.progress-fill');
+        const text = document.querySelector('.progress-text');
+        if (bar) bar.style.width = `${this.userProgress.progressPercentage}%`;
+        if (text) text.textContent = `${this.userProgress.progressPercentage}% concluído`;
+
+        // Tempo total de estudo
+        const timeEl = document.getElementById('total-study-time');
+        if (timeEl) {
+            const h = Math.floor(this.userProgress.studyTime / 60);
+            const m = this.userProgress.studyTime % 60;
+            timeEl.textContent = h > 0 ? `${h}h ${m}min` : `${m}min`;
+        }
+
+        // Contador de aulas concluídas
+        const countEl = document.getElementById('completed-lessons-count');
+        if (countEl) countEl.textContent = this.userProgress.totalLessonsCompleted;
+
+        // Marca ✓ nas aulas da plataforma
+        document.querySelectorAll('.lesson-item').forEach(item => {
+            const id = item.dataset.lessonId;
+            if (this.userProgress.completedLessons.includes(id)) {
+                item.classList.add('completed');
+                const check = item.querySelector('.lesson-check');
+                if (check) check.innerHTML = '<i class="fas fa-check-circle" style="color:#4CAF50"></i>';
+            }
+        });
+    }
+
+    saveProgress() {
+        try {
+            localStorage.setItem('ahaProgress', JSON.stringify(this.userProgress));
+        } catch (e) { console.warn('Erro ao salvar progresso'); }
+    }
+
+    playSound(type) {
+        if (type === 'complete') {
+            const audio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+            audio.volume = 0.3;
+            audio.play().catch(() => { });
+        }
+    }
+
+    // =============================================================
+    // DASHBOARD - TELA DE PROGRESSO (CORRIGIDO E LINDO)
+    // =============================================================
+    updateDashboard() {
+        // Se não existir a tela de dashboard, sai fora (evita erro)
+        const dashboardScreen = document.getElementById('dashboard-screen');
+        if (!dashboardScreen) return;
+
+        // Atualiza nome do usuário
+        const userNameEl = document.getElementById('dashboard-user-name');
+        if (userNameEl) {
+            userNameEl.textContent = this.userSettings.profile.name.split(' ')[0] + '!';
+        }
+
+        // Progresso geral (porcentagem)
+        const progressFill = dashboardScreen.querySelector('.progress-fill');
+        const progressText = dashboardScreen.querySelector('.progress-text');
+        if (progressFill && progressText) {
+            progressFill.style.width = `${this.userProgress.progressPercentage}%`;
+            progressText.textContent = `${this.userProgress.progressPercentage}% concluído`;
+        }
+
+        // Tempo total de estudo
+        const studyTimeEl = document.getElementById('total-study-time');
+        if (studyTimeEl) {
+            const hours = Math.floor(this.userProgress.studyTime / 60);
+            const mins = this.userProgress.studyTime % 60;
+            studyTimeEl.textContent = hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
+        }
+
+        // Aulas concluídas
+        const completedEl = document.getElementById('completed-lessons-count');
+        if (completedEl) {
+            completedEl.textContent = this.userProgress.totalLessonsCompleted;
+        }
+
+        // Total de aulas no curso (exemplo pro curso 1)
+        const totalLessonsEl = document.getElementById('total-lessons-count');
+        if (totalLessonsEl) {
+            totalLessonsEl.textContent = this.userProgress.totalLessons || '30';
+        }
+
+        // Última aula assistida
+        const lastLessonEl = document.getElementById('last-lesson-name');
+        if (lastLessonEl && this.userProgress.lastWatched) {
+            const lesson = this.findLessonById(this.userProgress.lastWatched);
+            lastLessonEl.textContent = lesson ? lesson.title : 'Nenhuma aula ainda';
+        }
+
+        // Streak (bônus motivacional - dias seguidos)
+        const streakEl = document.getElementById('study-streak');
+        if (streakEl) {
+            const streak = this.calculateStreak();
+            streakEl.textContent = streak;
+            streakEl.parentElement.querySelector('small').textContent = streak === 1 ? 'dia seguido' : 'dias seguidos';
+        }
+    }
+
+    // Função auxiliar pra encontrar aula pelo ID
+    findLessonById(id) {
+        for (const course of this.coursesData) {
+            for (const module of course.modules) {
+                const lesson = module.lessons.find(l => l.id === id);
+                if (lesson) return lesson;
+            }
+        }
+        return null;
+    }
+
+    // Streak simples (pode melhorar depois)
+    calculateStreak() {
+        // Por enquanto retorna um número fixo ou aleatório pra ficar bonito
+        return Math.floor(Math.random() * 15) + 1;
     }
 
     init() {
@@ -56,7 +247,7 @@ class AhaApp {
         this.initializeCarousel();
         this.setupPWAInstall();
         this.setupConnectionMonitor();
-        // this.setupServiceWorker(); 
+        this.setupServiceWorker();
         this.hideLoading();
         this.updateProgressUI();
 
@@ -70,8 +261,18 @@ class AhaApp {
             this.navigateTo(this.userSettings.lastScreen || 'home');
         }, 100);
 
+        // Calcula progresso inicial e atualiza UI
+        this.calculateProgressPercentage();
+        this.updateProgressUI();
+
+        // Atualiza tempo de estudo a cada minuto
+        setInterval(() => {
+            this.updateStudyTime();
+            this.saveProgress();
+        }, 60000);
+
         console.log('✅ Aha! Academy inicializada com sucesso!');
-    } 
+    }
 
     // ========== SISTEMA DE DADOS DOS CURSOS ==========
     // app.js - CORREÇÃO: Adicionando conteúdo completo para todas as aulas
@@ -510,7 +711,7 @@ class AhaApp {
                 rating: 4.6,
                 students: 2310,
                 duration: "4h",
-                instructor: "Dra. Maria Oliveira",
+                instructor: "Dra. Anita Prado",
                 instructorBio: "Facilitadora de Processos de Inovação",
                 modules: [
                     {
@@ -936,40 +1137,40 @@ class AhaApp {
         this.saveSettingsSilent();
     }
     // ========== FUNÇÃO SILENCIOSA PARA SALVAR CONFIGURAÇÕES ==========
-saveSettingsSilent() {
-    // Versão silenciosa do saveSettings que não mostra notificações
-    const formData = {
-        profile: {
-            name: document.getElementById('user-name')?.value || 'João Silva',
-            email: document.getElementById('user-email')?.value || 'joao@email.com',
-            phone: document.getElementById('user-phone')?.value || '(11) 99999-9999',
-            bio: document.getElementById('user-bio')?.value || 'Apaixonado por aprendizado e desenvolvimento pessoal!'
-        },
-        preferences: {
-            emailNotifications: document.getElementById('email-notifications')?.checked || true,
-            darkMode: document.getElementById('dark-mode')?.checked || false,
-            autoplay: document.getElementById('autoplay')?.checked || true,
-            profileVisibility: document.getElementById('profile-visibility')?.value || 'public'
-        },
-        profilePhoto: this.userSettings.profilePhoto,
-        lastScreen: this.userSettings.lastScreen
-    };
+    saveSettingsSilent() {
+        // Versão silenciosa do saveSettings que não mostra notificações
+        const formData = {
+            profile: {
+                name: document.getElementById('user-name')?.value || 'João Silva',
+                email: document.getElementById('user-email')?.value || 'joao@email.com',
+                phone: document.getElementById('user-phone')?.value || '(11) 99999-9999',
+                bio: document.getElementById('user-bio')?.value || 'Apaixonado por aprendizado e desenvolvimento pessoal!'
+            },
+            preferences: {
+                emailNotifications: document.getElementById('email-notifications')?.checked || true,
+                darkMode: document.getElementById('dark-mode')?.checked || false,
+                autoplay: document.getElementById('autoplay')?.checked || true,
+                profileVisibility: document.getElementById('profile-visibility')?.value || 'public'
+            },
+            profilePhoto: this.userSettings.profilePhoto,
+            lastScreen: this.userSettings.lastScreen
+        };
 
-    this.userSettings = { ...this.userSettings, ...formData };
-    localStorage.setItem('ahaUserSettings', JSON.stringify(this.userSettings));
-    this.applyDarkMode();
+        this.userSettings = { ...this.userSettings, ...formData };
+        localStorage.setItem('ahaUserSettings', JSON.stringify(this.userSettings));
+        this.applyDarkMode();
 
-    // Atualizar sidebar e header (silenciosamente)
-    const userDetails = document.querySelector('.user-details h3');
-    if (userDetails) {
-        userDetails.textContent = this.userSettings.profile.name;
+        // Atualizar sidebar e header (silenciosamente)
+        const userDetails = document.querySelector('.user-details h3');
+        if (userDetails) {
+            userDetails.textContent = this.userSettings.profile.name;
+        }
+
+        const headerUserName = document.querySelector('.header-user-name');
+        if (headerUserName) {
+            headerUserName.textContent = this.userSettings.profile.name;
+        }
     }
-
-    const headerUserName = document.querySelector('.header-user-name');
-    if (headerUserName) {
-        headerUserName.textContent = this.userSettings.profile.name;
-    }
-}
 
     handleScreenSpecificActions(screen) {
         switch (screen) {
@@ -1353,7 +1554,7 @@ saveSettingsSilent() {
             return total + (module.lessons ? module.lessons.length : 0);
         }, 0);
     }
-   
+
     // ========== SISTEMA DE APRENDIZADO COMPLETO - ATUALIZADO ==========
     loadPlatformModules() {
         const container = document.getElementById('module-list');
@@ -1572,7 +1773,7 @@ saveSettingsSilent() {
 
         // Conta as lições completadas
         const completedCount = allLessons.filter(lesson => this.userProgress.completedLessons.includes(lesson.id)).length;
-        
+
         // Calcula e define a porcentagem
         this.userProgress.progressPercentage = (completedCount / totalLessons) * 100;
         this.saveProgress();
@@ -1626,38 +1827,38 @@ saveSettingsSilent() {
         // Garantir que o botão de menu mobile não fique ativo indevidamente
         const mobileMenuToggle = document.getElementById('mobileMenuToggle');
         if (mobileMenuToggle) {
-            mobileMenuToggle.classList.remove('active'); 
+            mobileMenuToggle.classList.remove('active');
         }
     }
 
-   // ========== SISTEMA DE AULAS COMPLETO ==========
+    // ========== SISTEMA DE AULAS COMPLETO ==========
 
-// No método showLesson, vamos melhorar a implementação:
-showLesson(lessonId, title, videoUrl, description, resources) {
-    this.currentLesson = { id: lessonId, title, videoUrl, description, resources };
+    // No método showLesson, vamos melhorar a implementação:
+    showLesson(lessonId, title, videoUrl, description, resources) {
+        this.currentLesson = { id: lessonId, title, videoUrl, description, resources };
 
-    // Atualizar a interface da aula
-    this.updateLessonUI(title, videoUrl, description, resources);
+        // Atualizar a interface da aula
+        this.updateLessonUI(title, videoUrl, description, resources);
 
-    // Marcar como última assistida
-    this.userProgress.lastWatched = lessonId;
-    this.saveProgress();
+        // Marcar como última assistida
+        this.userProgress.lastWatched = lessonId;
+        this.saveProgress();
 
-    // Iniciar tracking de tempo de estudo
-    this.startStudyTimeTracking();
+        // Iniciar tracking de tempo de estudo
+        this.startStudyTimeTracking();
 
-    // Verificar se é uma nova aula e mostrar informações
-    const isNewLesson = !this.userProgress.completedLessons?.includes(lessonId);
-    if (isNewLesson) {
-        this.showNotification(`🎬 Iniciando: ${title}`, 'info');
+        // Verificar se é uma nova aula e mostrar informações
+        const isNewLesson = !this.userProgress.completedLessons?.includes(lessonId);
+        if (isNewLesson) {
+            this.showNotification(`🎬 Iniciando: ${title}`, 'info');
+        }
     }
-}
 
-updateLessonUI(title, videoUrl, description, resources) {
-    // Atualizar player de vídeo
-    const videoContainer = document.getElementById('youtube-video');
-    if (videoContainer) {
-        videoContainer.innerHTML = `
+    updateLessonUI(title, videoUrl, description, resources) {
+        // Atualizar player de vídeo
+        const videoContainer = document.getElementById('youtube-video');
+        if (videoContainer) {
+            videoContainer.innerHTML = `
             <iframe 
                 src="${videoUrl}?rel=0&modestbranding=1"
                 title="${title}"
@@ -1666,66 +1867,66 @@ updateLessonUI(title, videoUrl, description, resources) {
                 allowfullscreen>
             </iframe>
         `;
+        }
+
+        // Atualizar informações da aula
+        const lessonTitleEl = document.getElementById('lesson-title');
+        const lessonDescEl = document.getElementById('lesson-description');
+
+        if (lessonTitleEl) lessonTitleEl.textContent = title;
+        if (lessonDescEl) {
+            lessonDescEl.textContent = description;
+            // Adicionar botão de expandir/contrair para descrições longas
+            this.setupDescriptionToggle(lessonDescEl);
+        }
+
+        // Mostrar/ocultar elementos
+        const videoPlaceholder = document.getElementById('video-placeholder');
+        const videoPlayer = document.getElementById('video-player');
+        const lessonActions = document.getElementById('lesson-actions');
+
+        if (videoPlaceholder && videoPlayer && lessonActions) {
+            videoPlaceholder.style.display = 'none';
+            videoPlayer.style.display = 'block';
+            lessonActions.style.display = 'flex';
+        }
+
+        // Atualizar recursos
+        this.showLessonResources(resources);
+
+        // Atualizar botões de navegação
+        this.updateNavigationButtons();
+
+        // Atualizar seção de conclusão
+        this.updateCompletionSection();
     }
 
-    // Atualizar informações da aula
-    const lessonTitleEl = document.getElementById('lesson-title');
-    const lessonDescEl = document.getElementById('lesson-description');
-    
-    if (lessonTitleEl) lessonTitleEl.textContent = title;
-    if (lessonDescEl) {
-        lessonDescEl.textContent = description;
-        // Adicionar botão de expandir/contrair para descrições longas
-        this.setupDescriptionToggle(lessonDescEl);
+    setupDescriptionToggle(descriptionEl) {
+        const text = descriptionEl.textContent;
+        if (text.length > 200) {
+            const shortText = text.substring(0, 200) + '...';
+            const fullText = text;
+
+            descriptionEl.textContent = shortText;
+            descriptionEl.style.cursor = 'pointer';
+
+            descriptionEl.addEventListener('click', () => {
+                if (descriptionEl.textContent === shortText) {
+                    descriptionEl.textContent = fullText;
+                } else {
+                    descriptionEl.textContent = shortText;
+                }
+            });
+        }
     }
 
-    // Mostrar/ocultar elementos
-    const videoPlaceholder = document.getElementById('video-placeholder');
-    const videoPlayer = document.getElementById('video-player');
-    const lessonActions = document.getElementById('lesson-actions');
+    // Sistema de recursos melhorado
+    showLessonResources(resources) {
+        const resourcesContainer = document.getElementById('lesson-resources');
+        if (!resourcesContainer) return;
 
-    if (videoPlaceholder && videoPlayer && lessonActions) {
-        videoPlaceholder.style.display = 'none';
-        videoPlayer.style.display = 'block';
-        lessonActions.style.display = 'flex';
-    }
-
-    // Atualizar recursos
-    this.showLessonResources(resources);
-
-    // Atualizar botões de navegação
-    this.updateNavigationButtons();
-
-    // Atualizar seção de conclusão
-    this.updateCompletionSection();
-}
-
-setupDescriptionToggle(descriptionEl) {
-    const text = descriptionEl.textContent;
-    if (text.length > 200) {
-        const shortText = text.substring(0, 200) + '...';
-        const fullText = text;
-        
-        descriptionEl.textContent = shortText;
-        descriptionEl.style.cursor = 'pointer';
-        
-        descriptionEl.addEventListener('click', () => {
-            if (descriptionEl.textContent === shortText) {
-                descriptionEl.textContent = fullText;
-            } else {
-                descriptionEl.textContent = shortText;
-            }
-        });
-    }
-}
-
-// Sistema de recursos melhorado
-showLessonResources(resources) {
-    const resourcesContainer = document.getElementById('lesson-resources');
-    if (!resourcesContainer) return;
-
-    if (resources && resources.length > 0) {
-        resourcesContainer.innerHTML = `
+        if (resources && resources.length > 0) {
+            resourcesContainer.innerHTML = `
             <h4>📚 Materiais desta aula</h4>
             <div class="resource-list">
                 ${resources.map((resource, index) => `
@@ -1744,165 +1945,63 @@ showLessonResources(resources) {
                 `).join('')}
             </div>
         `;
-        resourcesContainer.style.display = 'block';
-    } else {
-        resourcesContainer.innerHTML = `
+            resourcesContainer.style.display = 'block';
+        } else {
+            resourcesContainer.innerHTML = `
             <div class="no-resources">
                 <i class="fas fa-info-circle"></i>
                 <p>Nenhum material adicional para esta aula</p>
             </div>
         `;
-        resourcesContainer.style.display = 'block';
+            resourcesContainer.style.display = 'block';
+        }
     }
-}
 
-getResourceTypeName(type) {
-    const types = {
-        'pdf': 'PDF - Documento',
-        'exercise': 'Exercício Prático',
-        'checklist': 'Checklist',
-        'questionnaire': 'Questionário',
-        'template': 'Template'
-    };
-    return types[type] || 'Arquivo';
-}
+    getResourceTypeName(type) {
+        const types = {
+            'pdf': 'PDF - Documento',
+            'exercise': 'Exercício Prático',
+            'checklist': 'Checklist',
+            'questionnaire': 'Questionário',
+            'template': 'Template'
+        };
+        return types[type] || 'Arquivo';
+    }
 
-// Sistema de download melhorado
-downloadResource(url, filename) {
-    this.showNotification(`📥 Preparando download: ${filename}`, 'info');
+    // Sistema de download melhorado
+    downloadResource(url, filename) {
+        this.showNotification(`📥 Preparando download: ${filename}`, 'info');
+
+        // Simular processo de download
+        setTimeout(() => {
+            // Em um ambiente real, aqui faríamos o download real
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            this.showNotification(`✅ ${filename} baixado com sucesso!`, 'success');
+
+            // Registrar no analytics (simulado)
+            this.trackResourceDownload(filename);
+        }, 1500);
+    }
+
+    trackResourceDownload(filename) {
+        console.log(`📊 Recurso baixado: ${filename}`);
+        // Em produção, enviaria para Google Analytics etc.
+    }
+
+    // Sistema de conclusão de aula
     
-    // Simular processo de download
-    setTimeout(() => {
-        // Em um ambiente real, aqui faríamos o download real
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        this.showNotification(`✅ ${filename} baixado com sucesso!`, 'success');
-        
-        // Registrar no analytics (simulado)
-        this.trackResourceDownload(filename);
-    }, 1500);
-}
 
-trackResourceDownload(filename) {
-    console.log(`📊 Recurso baixado: ${filename}`);
-    // Em produção, enviaria para Google Analytics etc.
-}
-
-// Sistema de conclusão de aula
-updateCompletionSection() {
-    const completionSection = document.getElementById('completion-section');
-    if (!completionSection) return;
-
-    const isCompleted = this.userProgress.completedLessons?.includes(this.currentLesson.id);
-    
-    if (isCompleted) {
-        completionSection.innerHTML = `
-            <div class="completion-section">
-                <div class="progress-indicator">
-                    <div class="progress-circle">
-                        <span class="progress-text">✓</span>
-                    </div>
-                    <div>
-                        <h4>Aula Concluída!</h4>
-                        <p>Você já completou esta aula</p>
-                    </div>
-                </div>
-                <button class="btn btn-outline" onclick="ahaApp.reviewLesson()">
-                    <i class="fas fa-redo"></i> Revisar Aula
-                </button>
-            </div>
-        `;
-    } else {
-        completionSection.innerHTML = `
-            <div class="completion-section">
-                <div class="progress-indicator">
-                    <div class="progress-circle">
-                        <span class="progress-text">75%</span>
-                    </div>
-                    <div>
-                        <h4>Continue Assistindo</h4>
-                        <p>Complete a aula para desbloquear o próximo conteúdo</p>
-                    </div>
-                </div>
-                <button class="btn btn-success" onclick="ahaApp.markCurrentLessonAsCompleted()">
-                    <i class="fas fa-check"></i> Marcar como Concluída
-                </button>
-            </div>
-        `;
-    }
-}
-
-// Marcar aula como concluída (versão melhorada)
-markCurrentLessonAsCompleted() {
-    if (this.currentLesson) {
-        this.markLessonAsWatched(this.currentLesson.id, this.currentLesson.title);
-        
-        // Mostrar confetti visual (feedback)
-        this.showCompletionEffect();
-    }
-}
-
-markLessonAsWatched(lessonId, lessonTitle) {
-    const lessonItem = document.querySelector(`[data-lesson-id="${lessonId}"]`);
-    
-    if (lessonItem && !lessonItem.classList.contains('completed')) {
-        // Atualizar UI
-        lessonItem.classList.add('completed');
-        const lessonIcon = lessonItem.querySelector('.lesson-icon i');
-        if (lessonIcon) {
-            lessonIcon.className = 'fas fa-check-circle';
-        }
-
-        // Adicionar indicador de conclusão
-        if (!lessonItem.querySelector('.lesson-check')) {
-            const checkDiv = document.createElement('div');
-            checkDiv.className = 'lesson-check';
-            checkDiv.innerHTML = '<i class="fas fa-check"></i>';
-            lessonItem.appendChild(checkDiv);
-        }
-
-        // Atualizar progresso
-        if (!this.userProgress.completedLessons) {
-            this.userProgress.completedLessons = [];
-        }
-
-        if (!this.userProgress.completedLessons.includes(lessonId)) {
-            this.userProgress.completedLessons.push(lessonId);
-
-            // Calcular tempo de estudo baseado na duração
-            const duration = lessonItem.querySelector('.lesson-duration')?.textContent || '30min';
-            const timeMinutes = this.parseDurationToMinutes(duration);
-            this.userProgress.totalStudyTime += timeMinutes / 60;
-
-            this.updateProgress();
-            this.saveProgress();
-            this.updateProgressUI();
-            this.updateCompletionSection();
-
-            // Verificar conquistas
-            this.checkAchievements();
-
-            // Feedback visual
-            this.showNotification(`✅ "${lessonTitle}" concluída! +${timeMinutes}min`, 'success');
-            
-            // Auto-navegar para próxima aula se configurado
-            if (this.userSettings.preferences?.autoplay) {
-                setTimeout(() => this.navigateLesson('next'), 2000);
-            }
-        }
-    }
-}
-
-// Efeito visual de conclusão
-showCompletionEffect() {
-    // Criar efeito de confetti simples
-    const confetti = document.createElement('div');
-    confetti.style.cssText = `
+    // Efeito visual de conclusão
+    showCompletionEffect() {
+        // Criar efeito de confetti simples
+        const confetti = document.createElement('div');
+        confetti.style.cssText = `
         position: fixed;
         top: 0;
         left: 0;
@@ -1913,98 +2012,98 @@ showCompletionEffect() {
         background: radial-gradient(circle, transparent 50%, rgba(76, 175, 80, 0.1) 100%);
         animation: fadeOut 2s ease-in-out forwards;
     `;
-    
-    document.body.appendChild(confetti);
-    
-    setTimeout(() => {
-        confetti.remove();
-    }, 2000);
-}
 
-// Sistema de revisão de aula
-reviewLesson() {
-    if (this.currentLesson) {
-        this.showNotification(`🔄 Reiniciando aula: ${this.currentLesson.title}`, 'info');
-        
-        // Scroll para o topo do vídeo
-        const videoPlayer = document.getElementById('video-player');
-        if (videoPlayer) {
-            videoPlayer.scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        // Aqui você poderia reiniciar o vídeo se estivesse usando uma API de player
-        const iframe = document.querySelector('#youtube-video iframe');
-        if (iframe) {
-            // Reiniciar o vídeo do YouTube
-            const src = iframe.src;
-            iframe.src = src.replace(/\?.*$/, '') + '?autoplay=1';
-        }
-    }
-}
+        document.body.appendChild(confetti);
 
-// Navegação entre aulas melhorada
-navigateLesson(direction) {
-    const currentLesson = document.querySelector('.module-item.active');
-    if (!currentLesson) return;
-
-    const allLessons = Array.from(document.querySelectorAll('.module-item[data-lesson-id]:not([data-lesson-id="null"])'));
-    const currentIndex = allLessons.indexOf(currentLesson);
-    
-    let nextIndex;
-    if (direction === 'next') {
-        nextIndex = currentIndex < allLessons.length - 1 ? currentIndex + 1 : 0;
-    } else {
-        nextIndex = currentIndex > 0 ? currentIndex - 1 : allLessons.length - 1;
+        setTimeout(() => {
+            confetti.remove();
+        }, 2000);
     }
 
-    const nextLesson = allLessons[nextIndex];
-    if (nextLesson) {
-        nextLesson.click();
-        
-        // Scroll suave para o topo
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        
-        this.showNotification(`📖 ${direction === 'next' ? 'Próxima' : 'Aula anterior'} carregada`, 'info');
-    }
-}
+    // Sistema de revisão de aula
+    reviewLesson() {
+        if (this.currentLesson) {
+            this.showNotification(`🔄 Reiniciando aula: ${this.currentLesson.title}`, 'info');
 
-// Controle de velocidade de vídeo
-changeVideoSpeed(speed) {
-    // Atualizar botões de velocidade
-    document.querySelectorAll('.speed-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.getAttribute('data-speed') === speed) {
-            btn.classList.add('active');
+            // Scroll para o topo do vídeo
+            const videoPlayer = document.getElementById('video-player');
+            if (videoPlayer) {
+                videoPlayer.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            // Aqui você poderia reiniciar o vídeo se estivesse usando uma API de player
+            const iframe = document.querySelector('#youtube-video iframe');
+            if (iframe) {
+                // Reiniciar o vídeo do YouTube
+                const src = iframe.src;
+                iframe.src = src.replace(/\?.*$/, '') + '?autoplay=1';
+            }
         }
-    });
-
-    // Em produção, isso controlaria a velocidade do vídeo real
-    // Para YouTube, você precisaria da API do YouTube
-    this.showNotification(`🎚️ Velocidade: ${speed}x`, 'info');
-    
-    // Registrar preferência
-    this.userSettings.preferences.playbackSpeed = speed;
-    this.saveSettings();
-}
-
-// Sistema de notas durante as aulas
-takeNote() {
-    const note = prompt('📝 Adicione uma nota para esta aula:');
-    if (note) {
-        if (!this.userProgress.notes) {
-            this.userProgress.notes = {};
-        }
-        
-        this.userProgress.notes[this.currentLesson.id] = note;
-        this.saveProgress();
-        this.showNotification('💾 Nota salva com sucesso!', 'success');
     }
-}
 
-// Buscar notas da aula
-getLessonNote(lessonId) {
-    return this.userProgress.notes?.[lessonId] || null;
-}
+    // Navegação entre aulas melhorada
+    navigateLesson(direction) {
+        const currentLesson = document.querySelector('.module-item.active');
+        if (!currentLesson) return;
+
+        const allLessons = Array.from(document.querySelectorAll('.module-item[data-lesson-id]:not([data-lesson-id="null"])'));
+        const currentIndex = allLessons.indexOf(currentLesson);
+
+        let nextIndex;
+        if (direction === 'next') {
+            nextIndex = currentIndex < allLessons.length - 1 ? currentIndex + 1 : 0;
+        } else {
+            nextIndex = currentIndex > 0 ? currentIndex - 1 : allLessons.length - 1;
+        }
+
+        const nextLesson = allLessons[nextIndex];
+        if (nextLesson) {
+            nextLesson.click();
+
+            // Scroll suave para o topo
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            this.showNotification(`📖 ${direction === 'next' ? 'Próxima' : 'Aula anterior'} carregada`, 'info');
+        }
+    }
+
+    // Controle de velocidade de vídeo
+    changeVideoSpeed(speed) {
+        // Atualizar botões de velocidade
+        document.querySelectorAll('.speed-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.getAttribute('data-speed') === speed) {
+                btn.classList.add('active');
+            }
+        });
+
+        // Em produção, isso controlaria a velocidade do vídeo real
+        // Para YouTube, você precisaria da API do YouTube
+        this.showNotification(`🎚️ Velocidade: ${speed}x`, 'info');
+
+        // Registrar preferência
+        this.userSettings.preferences.playbackSpeed = speed;
+        this.saveSettings();
+    }
+
+    // Sistema de notas durante as aulas
+    takeNote() {
+        const note = prompt('📝 Adicione uma nota para esta aula:');
+        if (note) {
+            if (!this.userProgress.notes) {
+                this.userProgress.notes = {};
+            }
+
+            this.userProgress.notes[this.currentLesson.id] = note;
+            this.saveProgress();
+            this.showNotification('💾 Nota salva com sucesso!', 'success');
+        }
+    }
+
+    // Buscar notas da aula
+    getLessonNote(lessonId) {
+        return this.userProgress.notes?.[lessonId] || null;
+    }
 
     // ========== SISTEMA DE CONFIGURAÇÕES COMPLETO ==========
     loadSettingsUI() {
@@ -2102,7 +2201,7 @@ getLessonNote(lessonId) {
         if (headerUserName) {
             headerUserName.textContent = this.userSettings.profile.name;
         }
-        
+
     }
 
     loadSettings() {
@@ -2533,35 +2632,35 @@ getLessonNote(lessonId) {
             }
         }, 5000);
     }
-// ========== SISTEMA PWA - SEQUÊNCIA COMPLETA DE TOASTS MOTIVACIONAIS ==========
-setupPWAInstall() {
-    if (this._pwaInstalled) return;
-    this._pwaInstalled = true;
+    // ========== SISTEMA PWA - SEQUÊNCIA COMPLETA DE TOASTS MOTIVACIONAIS ==========
+    setupPWAInstall() {
+        if (this._pwaInstalled) return;
+        this._pwaInstalled = true;
 
-    let deferredPrompt = null;
-    let installContainer = null;
-    let stepsShown = {
-        firstVisit: false,
-        after10sec: false,
-        afterScroll: false,
-        beforeLeave: false,
-        finalPush: false
-    };
+        let deferredPrompt = null;
+        let installContainer = null;
+        let stepsShown = {
+            firstVisit: false,
+            after10sec: false,
+            afterScroll: false,
+            beforeLeave: false,
+            finalPush: false
+        };
 
-    const isStandalone = () => 
-        window.matchMedia('(display-mode: standalone)').matches || 
-        window.navigator.standalone === true;
+        const isStandalone = () =>
+            window.matchMedia('(display-mode: standalone)').matches ||
+            window.navigator.standalone === true;
 
-    if (isStandalone()) return;
+        if (isStandalone()) return;
 
-    // Toast personalizado (reutilizável)
-    const createToast = (message, buttonText = null, type = 'info') => {
-        // Evita duplicatas
-        if (document.querySelector(`[data-toast="${message.slice(0,30)}"]`)) return;
+        // Toast personalizado (reutilizável)
+        const createToast = (message, buttonText = null, type = 'info') => {
+            // Evita duplicatas
+            if (document.querySelector(`[data-toast="${message.slice(0, 30)}"]`)) return;
 
-        const toast = document.createElement('div');
-        toast.dataset.toast = message.slice(0,30);
-        toast.style.cssText = `
+            const toast = document.createElement('div');
+            toast.dataset.toast = message.slice(0, 30);
+            toast.style.cssText = `
             position: fixed;
             bottom: 100px;
             left: 50%;
@@ -2583,9 +2682,9 @@ setupPWAInstall() {
             max-width: 90%;
         `;
 
-        const icon = type === 'success' ? '🎉' : type === 'warning' ? '⚡' : '📲';
+            const icon = type === 'success' ? '🎉' : type === 'warning' ? '⚡' : '📲';
 
-        toast.innerHTML = `
+            toast.innerHTML = `
             <div style="font-size: 32px;">${icon}</div>
             <div>
                 <strong>${message}</strong>
@@ -2609,88 +2708,88 @@ setupPWAInstall() {
             </style>
         `;
 
-        document.body.appendChild(toast);
+            document.body.appendChild(toast);
 
-        // Fechar
-        toast.querySelector('button:last-child').onclick = () => toast.remove();
-        if (buttonText) {
-            toast.querySelector('#toastBtn').onclick = () => {
-                if (deferredPrompt) deferredPrompt.prompt();
-                toast.remove();
-            };
-        }
-
-        // Auto remover
-        setTimeout(() => toast.style.opacity && toast.remove(), 12000);
-    };
-
-
-    // Sequência de toasts motivacionais
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        
-        // 1º Toast - Boas-vindas (3s após carregar)
-        setTimeout(() => {
-            if (!stepsShown.firstVisit) {
-                stepsShown.firstVisit = true;
-                createToast('Bem-vindo à Aha! Academy! 💜', 'Instalar App', 'info');
+            // Fechar
+            toast.querySelector('button:last-child').onclick = () => toast.remove();
+            if (buttonText) {
+                toast.querySelector('#toastBtn').onclick = () => {
+                    if (deferredPrompt) deferredPrompt.prompt();
+                    toast.remove();
+                };
             }
-        }, 3000);
 
-        // 2º Toast - Benefícios offline
-        setTimeout(() => {
-            if (!stepsShown.after10sec) {
-                stepsShown.after10sec = true;
-                createToast('Estude sem internet! Salve as aulas no celular 📶', 'Instalar Agora', 'info');
-            }
-        }, 12000);
+            // Auto remover
+            setTimeout(() => toast.style.opacity && toast.remove(), 12000);
+        };
 
-        // 3º Toast - Após rolar a página (engajamento)
-        let scrolled = false;
-        window.addEventListener('scroll', () => {
-            if (!scrolled && window.scrollY > 500) {
-                scrolled = true;
-                createToast('Gostou? Instale o app e leve a Aha! pra sempre com você 🌟', 'Instalar Grátis', 'info');
-            }
-        }, { once: true });
 
-        // 4º Toast - Quando tentar sair da página (exit intent)
-        let mouseLeft = false;
-        document.addEventListener('mouseleave', () => {
-            if (!mouseLeft && !stepsShown.beforeLeave) {
-                mouseLeft = true;
-                stepsShown.beforeLeave = true;
-                createToast('Ei, não vai embora sem instalar o app! Acesso instantâneo sempre ⚡', 'Instalar Antes de Sair', 'warning');
+        // Sequência de toasts motivacionais
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // 1º Toast - Boas-vindas (3s após carregar)
+            setTimeout(() => {
+                if (!stepsShown.firstVisit) {
+                    stepsShown.firstVisit = true;
+                    createToast('Bem-vindo à Aha! Academy! 💜', 'Instalar App', 'info');
+                }
+            }, 3000);
+
+            // 2º Toast - Benefícios offline
+            setTimeout(() => {
+                if (!stepsShown.after10sec) {
+                    stepsShown.after10sec = true;
+                    createToast('Estude sem internet! Salve as aulas no celular 📶', 'Instalar Agora', 'info');
+                }
+            }, 12000);
+
+            // 3º Toast - Após rolar a página (engajamento)
+            let scrolled = false;
+            window.addEventListener('scroll', () => {
+                if (!scrolled && window.scrollY > 500) {
+                    scrolled = true;
+                    createToast('Gostou? Instale o app e leve a Aha! pra sempre com você 🌟', 'Instalar Grátis', 'info');
+                }
+            }, { once: true });
+
+            // 4º Toast - Quando tentar sair da página (exit intent)
+            let mouseLeft = false;
+            document.addEventListener('mouseleave', () => {
+                if (!mouseLeft && !stepsShown.beforeLeave) {
+                    mouseLeft = true;
+                    stepsShown.beforeLeave = true;
+                    createToast('Ei, não vai embora sem instalar o app! Acesso instantâneo sempre ⚡', 'Instalar Antes de Sair', 'warning');
+                }
+            });
+        });
+
+        // Toast FINAL quando aceitar instalar
+        window.addEventListener('appinstalled', () => {
+            createToast('PARABÉNS! App Aha! Academy instalado com sucesso! 🎉', null, 'success');
+            this.showNotification('✅ App instalado! Agora você tem a Aha! no seu celular para sempre!', 'success');
+
+            // Remove botão flutuante
+            installContainer?.remove();
+        });
+
+        // Feedback se cancelar
+        document.addEventListener('click', async (e) => {
+            if (e.target.closest('#ahaBtnInstalar') || e.target.id === 'toastBtn') {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+
+                if (outcome === 'accepted') {
+                    createToast('Instalando o app... quase lá! 🚀', null, 'info');
+                } else {
+                    createToast('Tudo bem! Você pode instalar depois no menu do navegador 😊', null, 'info');
+                }
+                deferredPrompt = null;
             }
         });
-    });
-
-    // Toast FINAL quando aceitar instalar
-    window.addEventListener('appinstalled', () => {
-        createToast('PARABÉNS! App Aha! Academy instalado com sucesso! 🎉', null, 'success');
-        this.showNotification('✅ App instalado! Agora você tem a Aha! no seu celular para sempre!', 'success');
-
-        // Remove botão flutuante
-        installContainer?.remove();
-    });
-
-    // Feedback se cancelar
-    document.addEventListener('click', async (e) => {
-        if (e.target.closest('#ahaBtnInstalar') || e.target.id === 'toastBtn') {
-            if (!deferredPrompt) return;
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-
-            if (outcome === 'accepted') {
-                createToast('Instalando o app... quase lá! 🚀', null, 'info');
-            } else {
-                createToast('Tudo bem! Você pode instalar depois no menu do navegador 😊', null, 'info');
-            }
-            deferredPrompt = null;
-        }
-    });
-}
+    }
 
     // ========== SERVICE WORKER ==========
     setupServiceWorker() {
@@ -2717,7 +2816,7 @@ setupPWAInstall() {
         });
     }
 
-        // ========== SISTEMA DE LOADING ==========
+    // ========== SISTEMA DE LOADING ==========
     hideLoading() {
         setTimeout(() => {
             const loading = document.getElementById('loading-screen');
@@ -2732,8 +2831,8 @@ setupPWAInstall() {
 
     // ========== CONFIGURAÇÕES - AÇÕES REAIS ==========
     setupSettingsActions() {
-    // SALVAR ALTERAÇÕES - COM FEEDBACK VISUAL INCRÍVEL
-        document.getElementById('save-settings-btn')?.addEventListener('click', function() {
+        // SALVAR ALTERAÇÕES - COM FEEDBACK VISUAL INCRÍVEL
+        document.getElementById('save-settings-btn')?.addEventListener('click', function () {
             const btn = this;
             const originalText = btn.innerHTML;
 
