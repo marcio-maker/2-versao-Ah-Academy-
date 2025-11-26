@@ -1,13 +1,13 @@
 {
   "name": "Aha! Academy",
-  "short_name": "Aha Academy", 
+  "short_name": "Aha Academy",
   "description": "Plataforma de cursos online sobre liderança consciente e desenvolvimento pessoal",
-  "start_url": "/",
+  "start_url": ".",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#4CAF50",
-  "orientation": "portrait",
-  "scope": "/",
   "lang": "pt-BR",
   "categories": ["education", "productivity", "business"],
   "icons": [
@@ -15,12 +15,25 @@
       "src": "icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "icons/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

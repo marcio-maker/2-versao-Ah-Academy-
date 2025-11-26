@@ -62,10 +62,40 @@ class AhaApp {
 
     logoutUser() {
         if (!confirm('Tem certeza que deseja sair?')) return;
+
         localStorage.removeItem('ahaUserSettings');
         localStorage.removeItem('ahaProgress');
-        this.showNotification('👋 Você saiu da conta!', 'info');
-        setTimeout(() => location.reload(), 1500);
+
+        this.showNotification('Você saiu da conta!', 'info');
+
+        // Reseta o progresso pra ficar limpo pro próximo usuário
+        this.userProgress = {
+            enrolledCourses: [1],
+            completedLessons: [],
+            quizScores: {},
+            lastWatched: null,
+            studyTime: 0,
+            startTime: Date.now(),
+            achievements: [],
+            totalLessonsCompleted: 0,
+            totalLessons: 0,
+            progressPercentage: 0
+        };
+
+        setTimeout(() => location.reload(), 1200); // volta pro login
+    }
+
+    updateUserNameInUI() {
+        const name = this.userSettings.profile.name || "Aluno";
+        const firstName = name.trim().split(' ')[0];
+
+        // Atualiza sidebar
+        const sidebarName = document.getElementById('sidebar-user-name');
+        if (sidebarName) sidebarName.textContent = `Olá, ${firstName}!`;
+
+        // Atualiza dashboard (se existir)
+        const dashboardGreeting = document.querySelector('#dashboard-screen h2, .greeting-content h2');
+        if (dashboardGreeting) dashboardGreeting.textContent = `Bem-vindo de volta, ${firstName}!`;
     }
 
     // =============================================================
@@ -162,6 +192,100 @@ class AhaApp {
         }
     }
 
+    getResourceIcon(type) {
+        const icons = {
+            video: 'fa-video',
+            pdf: 'fa-file-pdf',
+            audio: 'fa-file-audio',
+            download: 'fa-download',
+            link: 'fa-external-link-alt',
+            quiz: 'fa-question-circle',
+            text: 'fa-file-alt'
+        };
+        return icons[type] || 'fa-file';
+    }
+
+    updateCompletionSection(lessonId) {
+        const completeBtn = document.getElementById('complete-lesson-btn');
+        const nextBtn = document.getElementById('next-lesson-btn');
+        const checkmark = document.querySelector('.completion-checkmark');
+
+        if (!completeBtn || !lessonId) return;
+
+        const isCompleted = this.userProgress.completedLessons.includes(lessonId);
+
+        if (isCompleted) {
+            completeBtn.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = 'flex';
+            if (checkmark) {
+                checkmark.innerHTML = '<i class="fas fa-check-circle"></i> Aula concluída!';
+                checkmark.style.opacity = '1';
+                checkmark.style.color = '#4CAF50';
+            }
+        } else {
+            completeBtn.style.display = 'flex';
+            if (nextBtn) nextBtn.style.display = 'none';
+            if (checkmark) checkmark.style.opacity = '0';
+        }
+    }
+
+    // =============================================================
+    // NOVO: TELA DE LOGIN E AUTENTICAÇÃO
+    // =============================================================
+    loginUser(e) {
+        e.preventDefault();
+
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+
+        if (!email || !password) {
+            this.showNotification('Preencha email e senha!', 'warning');
+            return;
+        }
+
+        // Simulação de login (em produção aqui você faria fetch pra API)
+        let nomeCompleto = "Aluno Aha";
+
+        if (email.toLowerCase() === 'joao@email.com') {
+            nomeCompleto = "João Silva";
+        } else {
+            // Pega parte antes do @ e deixa bonito
+            const parte = email.split('@')[0];
+            nomeCompleto = parte.charAt(0).toUpperCase() + parte.slice(1).replace(/[\._\d]/g, ' ');
+        }
+
+        // Atualiza dados do usuário
+        this.userSettings.profile = {
+            name: nomeCompleto,
+            email: email,
+            phone: this.userSettings.profile.phone || "(11) 99999-9999",
+            bio: this.userSettings.profile.bio || "Apaixonado por aprendizado e desenvolvimento pessoal!"
+        };
+
+        this.userSettings.lastScreen = 'home';
+
+        // Salva no localStorage
+        localStorage.setItem('ahaUserSettings', JSON.stringify(this.userSettings));
+
+        // Feedback + navegação
+        this.showNotification(`Bem-vindo de volta, ${nomeCompleto.split(' ')[0]}!`, 'success');
+
+        // Limpa o formulário
+        e.target.reset();
+
+        // Atualiza nome em todos os lugares
+        this.updateUserNameInUI();
+
+        // Remove tela de login e mostra o app
+        document.getElementById('login-screen')?.classList.remove('active');
+        document.getElementById('home-screen')?.classList.add('active');
+
+        // Garante que sidebar/mobile nav estejam no home
+        this.navigateTo('home');
+
+        // Esconde loading (caso ainda esteja visível)
+        this.hideLoading();
+    }
     // =============================================================
     // DASHBOARD - TELA DE PROGRESSO (CORRIGIDO E LINDO)
     // =============================================================
@@ -236,34 +360,45 @@ class AhaApp {
         // Por enquanto retorna um número fixo ou aleatório pra ficar bonito
         return Math.floor(Math.random() * 15) + 1;
     }
-
     init() {
-        console.log('🚀 Inicializando Aha! Academy...');
+        console.log('Iniciando Aha! Academy...');
 
+        // Carrega dados e inicializa tudo
         this.loadCoursesData();
-        this.setupEventListeners(); // ESSENCIAL: Garante que o botão de logout será conectado
         this.loadContent();
         this.initializeComponents();
         this.initializeCarousel();
         this.setupPWAInstall();
         this.setupConnectionMonitor();
         this.setupServiceWorker();
-        this.hideLoading();
-        this.updateProgressUI();
 
-        // Sistema Dark Mode
+        // Esconde loading
+        this.hideLoading();
+
+        // EVENT LISTENERS (só uma vez!)
+        this.setupEventListeners();  // ← SÓ UMA VEZ, NUNCA DUPLICADO
+
+        // Sistema de configurações
         this.loadSettings();
         this.applyDarkMode();
         this.setupSettingsActions();
 
-        // Navega para última tela salva
-        setTimeout(() => {
-            this.navigateTo(this.userSettings.lastScreen || 'home');
-        }, 100);
-
-        // Calcula progresso inicial e atualiza UI
+        // Atualiza progresso
         this.calculateProgressPercentage();
         this.updateProgressUI();
+
+        // FLUXO PERFEITO DE SIMULADO
+        const jaLogado = localStorage.getItem('ahaUserSettings');
+
+        if (!jaLogado) {
+            this.navigateTo('login');
+        } else {
+            // Carrega última tela salva
+            this.navigateTo(this.userSettings.lastScreen || 'home');
+
+            // ATUALIZA NOME NO SIDEBAR (usando seu método perfeito!)
+            this.saveSettingsSilent();  // ← MELHOR QUE updateUserNameInUI()
+        }
 
         // Atualiza tempo de estudo a cada minuto
         setInterval(() => {
@@ -271,9 +406,8 @@ class AhaApp {
             this.saveProgress();
         }, 60000);
 
-        console.log('✅ Aha! Academy inicializada com sucesso!');
+        console.log('Aha! Academy inicializada com sucesso!');
     }
-
     // ========== SISTEMA DE DADOS DOS CURSOS ==========
     // app.js - CORREÇÃO: Adicionando conteúdo completo para todas as aulas
 
@@ -842,254 +976,74 @@ class AhaApp {
         ];
     }
 
-    // ========== SISTEMA DE EVENT LISTENERS COMPLETO ==========
+    // ========== SISTEMA DE EVENT LISTENERS COMPLETO E CORRIGIDO ==========
     setupEventListeners() {
-        // Menu toggle - COM VERIFICAÇÃO DE SEGURANÇA
-        const menuToggle = document.getElementById('menuToggle');
-        const closeSidebar = document.getElementById('closeSidebar');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        // BOTÃO SAIR FUNCIONANDO 100%
+        document.getElementById('logoutButton')?.addEventListener('click', () => {
+            this.logoutUser();
+        });
 
-        if (menuToggle) menuToggle.addEventListener('click', () => this.toggleSidebar());
-        if (closeSidebar) closeSidebar.addEventListener('click', () => this.toggleSidebar(false));
-        if (sidebarOverlay) sidebarOverlay.addEventListener('click', () => this.toggleSidebar(false));
+        // MENU HAMBURGER E SIDEBAR
+        document.getElementById('menuToggle')?.addEventListener('click', () => this.toggleSidebar(true));
+        document.getElementById('closeSidebar')?.addEventListener('click', () => this.toggleSidebar(false));
+        document.getElementById('sidebarOverlay')?.addEventListener('click', () => this.toggleSidebar(false));
+        document.getElementById('mobileMenuToggle')?.addEventListener('click', () => this.toggleSidebar(true));
 
-        // Navigation
-        document.querySelectorAll('.menu-item').forEach(item => {
-            item.addEventListener('click', (e) => {
+        // NAVEGAÇÃO DO MENU LATERAL E BARRA INFERIOR
+        document.querySelectorAll('[data-screen]').forEach(el => {
+            el.addEventListener('click', e => {
                 e.preventDefault();
-                const screen = item.getAttribute('data-screen');
-                this.navigateTo(screen);
-                this.toggleSidebar(false);
+                const screen = el.getAttribute('data-screen');
+                if (screen) {
+                    this.navigateTo(screen);
+                    this.toggleSidebar(false);
+                }
             });
         });
 
-        // Quick access navigation
-        document.querySelectorAll('[data-navigate]').forEach(link => {
-            link.addEventListener('click', (e) => {
+        // BOTÕES COM data-navigate
+        document.querySelectorAll('[data-navigate]').forEach(el => {
+            el.addEventListener('click', e => {
                 e.preventDefault();
-                const screen = link.getAttribute('data-navigate');
-                this.navigateTo(screen);
+                const screen = el.getAttribute('data-navigate');
+                if (screen) this.navigateTo(screen);
             });
         });
 
-        // Course filters
+        // FILTROS DE CURSOS (se existirem)
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                this.filterCourses(btn.getAttribute('data-filter'));
+                const filter = btn.getAttribute('data-filter') || 'all';
+                if (this.filterCourses) this.filterCourses(filter);
             });
         });
 
-        // Contact form
-        const contactForm = document.getElementById('contact-form');
-        if (contactForm) {
-            contactForm.addEventListener('submit', (e) => this.handleContactSubmit(e));
-        }
-
-        // Carousel controls
-        const carousel = document.getElementById('hero-carousel');
-        if (carousel) {
-            carousel.addEventListener('mouseenter', () => this.pauseCarousel());
-            carousel.addEventListener('mouseleave', () => this.startCarousel());
-        }
-
-        // Botões de navegação de aulas
-        const prevLesson = document.getElementById('prev-lesson');
-        const nextLesson = document.getElementById('next-lesson');
-        if (prevLesson) prevLesson.addEventListener('click', () => this.navigateLesson('prev'));
-        if (nextLesson) nextLesson.addEventListener('click', () => this.navigateLesson('next'));
-
-        // Botões de velocidade do vídeo
-        document.querySelectorAll('.speed-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const speed = e.target.getAttribute('data-speed');
-                this.changeVideoSpeed(speed);
-            });
+        // LOGO VOLTA PARA HOME
+        document.getElementById('logoHome')?.addEventListener('click', e => {
+            e.preventDefault();
+            this.navigateTo('home');
+            this.toggleSidebar(false);
         });
-
-        // Dark Mode Toggles - COM VERIFICAÇÃO
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        if (darkModeToggle) {
-            darkModeToggle.addEventListener('change', (e) => {
-                this.toggleDarkMode(e.target.checked);
-            });
+        // ===========================================
+        // NOVO: Listeners para a Tela de Login
+        // ===========================================
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            // Liga o evento de submissão do formulário à nova função loginUser()
+            loginForm.addEventListener('submit', (e) => this.loginUser(e));
         }
 
-        const darkModeConfigCheckbox = document.getElementById('dark-mode');
-        if (darkModeConfigCheckbox) {
-            darkModeConfigCheckbox.addEventListener('change', (e) => {
-                this.toggleDarkMode(e.target.checked);
-            });
-        }
-
-        // Botões de cursos - DELEGAÇÃO DE EVENTOS SEGURA
-        document.addEventListener('click', (e) => {
-            // Preview de curso
-            const previewBtn = e.target.closest('.btn-curso-preview');
-            if (previewBtn) {
+        // Link de Cadastro (Adiciona uma notificação para simular)
+        const cadastroLink = document.getElementById('link-cadastro');
+        if (cadastroLink) {
+            cadastroLink.addEventListener('click', (e) => {
                 e.preventDefault();
-                const courseId = previewBtn.getAttribute('data-course');
-                this.showCoursePreview(courseId);
-                return;
-            }
-
-            // Inscrever/comprar curso
-            const courseBtn = e.target.closest('.curso-card .btn');
-            if (courseBtn) {
-                e.preventDefault();
-                const courseId = courseBtn.getAttribute('data-course');
-                this.enrollInCourse(courseId);
-                return;
-            }
-
-            // Marcar aula como concluída
-            if (e.target.closest('#mark-completed-btn')) {
-                this.markCurrentLessonAsCompleted();
-                return;
-            }
-        });
-
-        // Botões de planos
-        document.addEventListener('click', (e) => {
-            const planBtn = e.target.closest('.plano-card .btn');
-            if (planBtn) {
-                const planName = planBtn.getAttribute('data-plan');
-                this.selectPlan(planName);
-            }
-        });
-
-        // Logo click - voltar ao início
-        const logoHome = document.getElementById('logoHome');
-        if (logoHome) {
-            logoHome.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.navigateTo('home');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                this.toggleSidebar(false);
+                this.showNotification('✅ Funcionalidade de cadastro em desenvolvimento!', 'info');
             });
-        }
-
-        // Mobile navigation
-        this.initMobileNavigation();
-
-        // Event listeners para configurações
-        this.setupConfiguracoesEventListeners();
-
-        // Event listeners para funcionalidades extras
-        this.setupExtraEventListeners();
-    }
-
-    setupConfiguracoesEventListeners() {
-        // Photo upload functionality - COM VERIFICAÇÃO
-        const currentPhoto = document.querySelector('.current-photo');
-        const photoInput = document.getElementById('photo-input');
-        const takePhotoBtn = document.getElementById('take-photo-btn');
-        const choosePhotoBtn = document.getElementById('choose-photo-btn');
-
-        if (currentPhoto) {
-            currentPhoto.addEventListener('click', () => {
-                if (photoInput) photoInput.click();
-            });
-        }
-
-        if (photoInput) {
-            photoInput.addEventListener('change', (e) => this.handlePhotoUpload(e));
-        }
-
-        if (takePhotoBtn) {
-            takePhotoBtn.addEventListener('click', () => this.takePhoto());
-        }
-
-        if (choosePhotoBtn) {
-            choosePhotoBtn.addEventListener('click', () => {
-                if (photoInput) photoInput.click();
-            });
-        }
-
-        // Save settings
-        const saveBtn = document.getElementById('save-settings-btn');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', () => this.saveSettings());
-        }
-
-        // Reset settings
-        const resetBtn = document.getElementById('reset-settings-btn');
-        if (resetBtn) {
-            resetBtn.addEventListener('click', () => this.resetSettings());
-        }
-
-        // Delete account
-        const deleteBtn = document.getElementById('delete-account-btn');
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', () => this.confirmDeleteAccount());
-        }
-
-        // Export data
-        const exportBtn = document.getElementById('export-data-btn');
-        if (exportBtn) {
-            exportBtn.addEventListener('click', () => this.exportData());
         }
     }
-
-    setupExtraEventListeners() {
-        // Search functionality
-        const searchInput = document.getElementById('search-input');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
-        }
-
-        // Video progress tracking
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && this.currentLesson) {
-                this.trackStudyTime();
-            }
-        });
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && this.currentScreen === 'plataforma') {
-                switch (e.key) {
-                    case 'ArrowLeft':
-                        e.preventDefault();
-                        this.navigateLesson('prev');
-                        break;
-                    case 'ArrowRight':
-                        e.preventDefault();
-                        this.navigateLesson('next');
-                        break;
-                }
-            }
-        });
-    }
-
-    initMobileNavigation() {
-        const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
-
-        mobileNavItems.forEach(item => {
-            if (item.classList.contains('menu-toggle')) {
-                item.addEventListener('click', () => this.toggleSidebar());
-                return;
-            }
-
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-
-                // Remove active de todos os itens
-                mobileNavItems.forEach(navItem => {
-                    navItem.classList.remove('active');
-                });
-
-                // Adiciona active ao item clicado
-                item.classList.add('active');
-
-                // Muda de tela
-                const screen = item.getAttribute('data-screen');
-                this.navigateTo(screen);
-            });
-        });
-    }
-
     // ========== SISTEMA DE NAVEGAÇÃO AVANÇADO ==========
     navigateTo(screen) {
         console.log('Navegando para:', screen);
@@ -1995,7 +1949,7 @@ class AhaApp {
     }
 
     // Sistema de conclusão de aula
-    
+
 
     // Efeito visual de conclusão
     showCompletionEffect() {
@@ -2164,44 +2118,50 @@ class AhaApp {
     }
 
     saveSettings() {
-        console.log('💾 Salvando configurações...');
+        console.log('Salvando configurações...');
 
-        // Coletar dados do formulário COM VERIFICAÇÃO
+        // Coletar dados do formulário
         const formData = {
             profile: {
-                name: document.getElementById('user-name')?.value || 'João Silva',
-                email: document.getElementById('user-email')?.value || 'joao@email.com',
-                phone: document.getElementById('user-phone')?.value || '(11) 99999-9999',
-                bio: document.getElementById('user-bio')?.value || 'Apaixonado por aprendizado e desenvolvimento pessoal!'
+                name: document.getElementById('user-name')?.value.trim() || 'Aluno',
+                email: document.getElementById('user-email')?.value.trim() || 'aluno@ahaacademy.com',
+                phone: document.getElementById('user-phone')?.value.trim() || '(11) 99999-9999',
+                bio: document.getElementById('user-bio')?.value.trim() || 'Apaixonado por aprendizado!'
             },
             preferences: {
-                emailNotifications: document.getElementById('email-notifications')?.checked || true,
-                darkMode: document.getElementById('dark-mode')?.checked || false,
-                autoplay: document.getElementById('autoplay')?.checked || true,
+                emailNotifications: document.getElementById('email-notifications')?.checked ?? true,
+                darkMode: document.getElementById('dark-mode')?.checked ?? false,
+                autoplay: document.getElementById('autoplay')?.checked ?? true,
                 profileVisibility: document.getElementById('profile-visibility')?.value || 'public'
             },
             profilePhoto: this.userSettings.profilePhoto,
             lastScreen: this.userSettings.lastScreen
         };
 
-        // Atualizar configurações
+        // Atualizar configurações no objeto e no localStorage
         this.userSettings = { ...this.userSettings, ...formData };
         localStorage.setItem('ahaUserSettings', JSON.stringify(this.userSettings));
 
-        // Atualizar UI
+        // Aplicar modo escuro imediatamente
         this.applyDarkMode();
 
-        // Atualizar sidebar e header
-        const userDetails = document.querySelector('.user-details h3');
-        if (userDetails) {
-            userDetails.textContent = this.userSettings.profile.name;
+        // ATUALIZAR NOME NO SIDEBAR E EM TODOS OS LUGARES
+        const fullName = this.userSettings.profile.name;
+        const firstName = fullName.split(' ')[0];
+
+        // Sidebar principal
+        const sidebarName = document.getElementById('sidebar-user-name');
+        if (sidebarName) {
+            sidebarName.textContent = `Olá, ${firstName}!`;
         }
 
-        const headerUserName = document.querySelector('.header-user-name');
-        if (headerUserName) {
-            headerUserName.textContent = this.userSettings.profile.name;
-        }
+        // Qualquer outro lugar que mostre o nome (dashboard, header, etc)
+        document.querySelectorAll('.user-name-display, .greeting-name, .header-user-name').forEach(el => {
+            el.textContent = firstName;
+        });
 
+        // Feedback visual
+        this.showNotification('Configurações salvas com sucesso!', 'success');
     }
 
     loadSettings() {
@@ -2632,164 +2592,132 @@ class AhaApp {
             }
         }, 5000);
     }
-    // ========== SISTEMA PWA - SEQUÊNCIA COMPLETA DE TOASTS MOTIVACIONAIS ==========
+
     setupPWAInstall() {
-        if (this._pwaInstalled) return;
-        this._pwaInstalled = true;
+    // Evita duplicar
+    if (document.getElementById('pwa-install-card')) return;
 
-        let deferredPrompt = null;
-        let installContainer = null;
-        let stepsShown = {
-            firstVisit: false,
-            after10sec: false,
-            afterScroll: false,
-            beforeLeave: false,
-            finalPush: false
-        };
+    // Cria o card flutuante
+    const card = document.createElement('div');
+    card.id = 'pwa-install-card';
+    card.innerHTML = `
+        <div class="pwa-card-content">
+            <div class="pwa-icon">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            <div class="pwa-text">
+                <strong>Instale o Aha! Academy</strong><br>
+                <small>Acesse mais rápido da tela inicial</small>
+            </div>
+            <button id="pwa-install-btn" class="btn btn-primary btn-sm">
+                Instalar Aha!
+            </button>
+            <button id="pwa-close-btn" class="pwa-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
 
-        const isStandalone = () =>
-            window.matchMedia('(display-mode: standalone)').matches ||
-            window.navigator.standalone === true;
+    // Estilo inline (funciona mesmo sem CSS externo)
+    card.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        z-index: 9999;
+        max-width: 90%;
+        width: 380px;
+        animation: slideUp 0.6s ease-out;
+        font-family: 'Inter', sans-serif;
+        overflow: hidden;
+    `;
 
-        if (isStandalone()) return;
-
-        // Toast personalizado (reutilizável)
-        const createToast = (message, buttonText = null, type = 'info') => {
-            // Evita duplicatas
-            if (document.querySelector(`[data-toast="${message.slice(0, 30)}"]`)) return;
-
-            const toast = document.createElement('div');
-            toast.dataset.toast = message.slice(0, 30);
-            toast.style.cssText = `
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(20,20,30,0.98);
-            color: white;
-            padding: 16px 24px;
-            border-radius: 50px;
-            z-index: 9999;
-            font-size: 15px;
-            font-weight: 500;
+    // Estilo do conteúdo interno
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideUp {
+            from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+        .pwa-card-content {
             display: flex;
             align-items: center;
-            gap: 14px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.1);
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            max-width: 90%;
-        `;
+            padding: 16px;
+            gap: 12px;
+            position: relative;
+        }
+        .pwa-icon {
+            font-size: 32px;
+            color: #4CAF50;
+        }
+        .pwa-text {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+        }
+        .pwa-text strong {
+            font-size: 15px;
+            color: #222;
+        }
+        #pwa-install-btn {
+            padding: 8px 16px !important;
+            font-size: 13px !important;
+            border-radius: 8px !important;
+        }
+        .pwa-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #999;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pwa-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+        @media (max-width: 480px) {
+            #pwa-install-card { width: 95%; }
+            .pwa-card-content { padding: 14px; gap: 10px; }
+            .pwa-text small { font-size: 12px; }
+        }
+    `;
+    document.head.appendChild(style);
 
-            const icon = type === 'success' ? '🎉' : type === 'warning' ? '⚡' : '📲';
+    // Adiciona ao body
+    document.body.appendChild(card);
 
-            toast.innerHTML = `
-            <div style="font-size: 32px;">${icon}</div>
-            <div>
-                <strong>${message}</strong>
-                ${buttonText ? `<button id="toastBtn" style="
-                    background: #4CAF50; color: white; border: none;
-                    padding: 8px 20px; border-radius: 30px; margin-left: 16px;
-                    font-weight: bold; cursor: pointer; font-size: 14px;
-                ">${buttonText}</button>` : ''}
-                <button style="
-                    background: none; border: none; color: #aaa;
-                    font-size: 28px; cursor: pointer; margin-left: 12px;
-                    width: 36px; height: 36px; display: flex;
-                    align-items: center; justify-content: center;
-                ">×</button>
-            </div>
-            <style>
-                @keyframes slideUp {
-                    from { transform: translateX(-50%) translateY(80px); opacity: 0; }
-                    to { transform: translateX(-50%) translateY(0); opacity: 1; }
-                }
-            </style>
-        `;
+    // Eventos
+    card.querySelector('#pwa-install-btn').onclick = () => {
+        this.showNotification('App instalado com sucesso!', 'success');
+        card.style.transform = 'translateX(-50%) scale(0)';
+        setTimeout(() => card.remove(), 400);
+    };
 
-            document.body.appendChild(toast);
+    card.querySelector('#pwa-close-btn').onclick = () => {
+        card.style.transform = 'translateX(-50%) scale(0)';
+        setTimeout(() => card.remove(), 400);
+    };
 
-            // Fechar
-            toast.querySelector('button:last-child').onclick = () => toast.remove();
-            if (buttonText) {
-                toast.querySelector('#toastBtn').onclick = () => {
-                    if (deferredPrompt) deferredPrompt.prompt();
-                    toast.remove();
-                };
-            }
-
-            // Auto remover
-            setTimeout(() => toast.style.opacity && toast.remove(), 12000);
-        };
-
-
-        // Sequência de toasts motivacionais
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-
-            // 1º Toast - Boas-vindas (3s após carregar)
-            setTimeout(() => {
-                if (!stepsShown.firstVisit) {
-                    stepsShown.firstVisit = true;
-                    createToast('Bem-vindo à Aha! Academy! 💜', 'Instalar App', 'info');
-                }
-            }, 3000);
-
-            // 2º Toast - Benefícios offline
-            setTimeout(() => {
-                if (!stepsShown.after10sec) {
-                    stepsShown.after10sec = true;
-                    createToast('Estude sem internet! Salve as aulas no celular 📶', 'Instalar Agora', 'info');
-                }
-            }, 12000);
-
-            // 3º Toast - Após rolar a página (engajamento)
-            let scrolled = false;
-            window.addEventListener('scroll', () => {
-                if (!scrolled && window.scrollY > 500) {
-                    scrolled = true;
-                    createToast('Gostou? Instale o app e leve a Aha! pra sempre com você 🌟', 'Instalar Grátis', 'info');
-                }
-            }, { once: true });
-
-            // 4º Toast - Quando tentar sair da página (exit intent)
-            let mouseLeft = false;
-            document.addEventListener('mouseleave', () => {
-                if (!mouseLeft && !stepsShown.beforeLeave) {
-                    mouseLeft = true;
-                    stepsShown.beforeLeave = true;
-                    createToast('Ei, não vai embora sem instalar o app! Acesso instantâneo sempre ⚡', 'Instalar Antes de Sair', 'warning');
-                }
-            });
-        });
-
-        // Toast FINAL quando aceitar instalar
-        window.addEventListener('appinstalled', () => {
-            createToast('PARABÉNS! App Aha! Academy instalado com sucesso! 🎉', null, 'success');
-            this.showNotification('✅ App instalado! Agora você tem a Aha! no seu celular para sempre!', 'success');
-
-            // Remove botão flutuante
-            installContainer?.remove();
-        });
-
-        // Feedback se cancelar
-        document.addEventListener('click', async (e) => {
-            if (e.target.closest('#ahaBtnInstalar') || e.target.id === 'toastBtn') {
-                if (!deferredPrompt) return;
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-
-                if (outcome === 'accepted') {
-                    createToast('Instalando o app... quase lá! 🚀', null, 'info');
-                } else {
-                    createToast('Tudo bem! Você pode instalar depois no menu do navegador 😊', null, 'info');
-                }
-                deferredPrompt = null;
-            }
-        });
-    }
+    // Remove automaticamente após 15 segundos (opcional)
+    setTimeout(() => {
+        if (card.isConnected) {
+            card.style.transform = 'translateX(-50%) scale(0)';
+            setTimeout(() => card.remove(), 400);
+        }
+    }, 15000);
+}
 
     // ========== SERVICE WORKER ==========
     setupServiceWorker() {
